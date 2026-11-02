@@ -62,7 +62,7 @@ const APP_ROLES = new Set<Role>([
 function readSessionRole(): Role | null {
   if (typeof window === 'undefined') return null
   // Production: never restore a role without a login session
-  if (!import.meta.env.DEV) {
+  if (import.meta.env.PROD) {
     try {
       const raw = localStorage.getItem('wsh_uat_session')
       if (!raw) return null
@@ -107,7 +107,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const setRole = useCallback((next: Role) => {
     // Production: block persona hopping into app roles without a session
     if (
-      !import.meta.env.DEV &&
+      import.meta.env.PROD &&
       APP_ROLES.has(next) &&
       typeof window !== 'undefined'
     ) {

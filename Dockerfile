@@ -12,7 +12,9 @@ RUN npm ci --include=dev || npm install
 RUN npx prisma generate --schema backend/prisma/schema.prisma
 
 COPY . .
-RUN npm run build
+# Install used NODE_ENV=development so tsc/vite exist; force production mode for the SPA bundle
+# (otherwise import.meta.env.DEV stays true and PersonaSwitcher ships to parents).
+RUN NODE_ENV=production npm run build
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
