@@ -1,10 +1,14 @@
 # Haeru — SPA + Pulse API + Telegram Voice AI (Coolify)
 FROM node:22-alpine AS build
 WORKDIR /app
+# Coolify may inject NODE_ENV=production into the build; keep tooling available.
+ENV NODE_ENV=development
+
+RUN apk add --no-cache openssl libc6-compat
 
 COPY package.json package-lock.json* ./
 COPY backend/prisma ./backend/prisma
-RUN npm ci || npm install
+RUN npm ci --include=dev || npm install
 RUN npx prisma generate --schema backend/prisma/schema.prisma
 
 COPY . .
