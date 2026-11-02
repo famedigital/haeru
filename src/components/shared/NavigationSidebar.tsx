@@ -102,12 +102,12 @@ function sectionFromLabel(label: string, role: Role): SectionKey {
   return 'operations'
 }
 
-type Props = {
-  mobileOpen?: boolean
-  onMobileClose?: () => void
+type PanelProps = {
+  showClose?: boolean
+  onClose?: () => void
 }
 
-export function NavigationSidebar({ mobileOpen = false, onMobileClose }: Props) {
+function NavPanel({ showClose, onClose }: PanelProps) {
   const {
     role,
     screen,
@@ -118,6 +118,7 @@ export function NavigationSidebar({ mobileOpen = false, onMobileClose }: Props) 
     showToast,
   } = useAppStore()
   if (role === 'signin' || role === 'landing') return null
+
   const cfg = ROLE_CONFIGS[role as Exclude<Role, 'signin' | 'landing'>]
   const displayName = currentUser?.name || cfg.userName
   const displayRole = currentUser?.role || cfg.label
@@ -131,11 +132,11 @@ export function NavigationSidebar({ mobileOpen = false, onMobileClose }: Props) 
 
   const go = (id: string) => {
     setScreen(id)
-    onMobileClose?.()
+    onClose?.()
   }
 
-  const panel = (
-    <div className="flex h-full w-64 flex-col gap-4 p-4 overflow-y-auto">
+  return (
+    <div className="flex h-full w-full flex-col gap-4 p-4 overflow-y-auto">
       <div className="flex items-start justify-between gap-2 px-2 pt-2">
         <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -153,12 +154,12 @@ export function NavigationSidebar({ mobileOpen = false, onMobileClose }: Props) 
             </span>
           </div>
         </div>
-        {onMobileClose ? (
+        {showClose ? (
           <button
             type="button"
-            className="md:hidden w-9 h-9 rounded-xl obsidian-pill flex items-center justify-center text-slate-600 dark:text-slate-300"
+            className="w-9 h-9 rounded-xl obsidian-pill flex items-center justify-center text-slate-600 dark:text-slate-300"
             aria-label="Close menu"
-            onClick={onMobileClose}
+            onClick={onClose}
           >
             <X className="w-4 h-4" />
           </button>
@@ -243,7 +244,7 @@ export function NavigationSidebar({ mobileOpen = false, onMobileClose }: Props) 
             type="button"
             onClick={() => {
               if (window.confirm('Sign out of Haeru?')) {
-                onMobileClose?.()
+                onClose?.()
                 logout()
               }
             }}
@@ -256,38 +257,36 @@ export function NavigationSidebar({ mobileOpen = false, onMobileClose }: Props) 
       </div>
     </div>
   )
+}
+
+type Props = {
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+}
+
+export function NavigationSidebar({ mobileOpen = false, onMobileClose }: Props) {
+  const { role } = useAppStore()
+  if (role === 'signin' || role === 'landing') return null
 
   return (
     <>
       <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl sticky top-0 h-screen">
-        {panel}
+        <NavPanel />
       </aside>
 
-      <div
-        className={cn(
-          'md:hidden fixed inset-0 z-50 transition',
-          mobileOpen ? 'pointer-events-auto' : 'pointer-events-none',
-        )}
-        aria-hidden={!mobileOpen}
-      >
-        <button
-          type="button"
-          className={cn(
-            'absolute inset-0 bg-slate-950/50 backdrop-blur-sm transition-opacity',
-            mobileOpen ? 'opacity-100' : 'opacity-0',
-          )}
-          aria-label="Dismiss menu"
-          onClick={onMobileClose}
-        />
-        <aside
-          className={cn(
-            'absolute inset-y-0 left-0 w-[min(18rem,88vw)] border-r border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl shadow-2xl transition-transform duration-200',
-            mobileOpen ? 'translate-x-0' : '-translate-x-full',
-          )}
-        >
-          {panel}
-        </aside>
-      </div>
+      {mobileOpen ? (
+        <div className="md:hidden fixed inset-0 z-50">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
+            aria-label="Dismiss menu"
+            onClick={onMobileClose}
+          />
+          <aside className="absolute inset-y-0 left-0 w-[min(18rem,88vw)] border-r border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl shadow-2xl">
+            <NavPanel showClose onClose={onMobileClose} />
+          </aside>
+        </div>
+      ) : null}
     </>
   )
 }
