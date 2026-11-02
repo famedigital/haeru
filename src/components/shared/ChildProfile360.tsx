@@ -90,7 +90,11 @@ export function ChildProfile360() {
   const { role, selectedChildId, setScreen, showToast } = useAppStore()
   const [tab, setTab] = useState(0)
 
-  const child = CHILDREN.find((c) => c.id === selectedChildId) ?? CHILDREN[0]!
+  // Login may select a live DB child id; fall back to Kinley pilot mock for profile chrome
+  const child =
+    CHILDREN.find((c) => c.id === selectedChildId) ??
+    CHILDREN.find((c) => c.id === 'c1') ??
+    CHILDREN[0]!
   const room = ROOMS[child.room]
   const first = childFirstName(child.name)
   const canSeeFees = role === 'owner' || role === 'parent'

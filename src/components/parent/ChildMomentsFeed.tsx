@@ -1,6 +1,7 @@
 import { Heart, ImageOff } from 'lucide-react'
-import { useMemo, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { CHILDREN, childFirstName } from '../../data/enterprise'
+import { apiFetch } from '../../lib/api/httpClient'
 import {
   listAllDeliveredMoments,
   listDeliveredMomentsForChildren,
@@ -15,6 +16,43 @@ import { PageHeader } from '../shared/PageHeader'
 /** Facilitator demo classroom — nursery (matches PhotoStaging). */
 const FACILITATOR_ROOM = 'nursery'
 
+type LiveHermes = {
+  id: string
+  childName: string
+  domain: string
+  transcription: string | null
+  rawHermesJson?: string
+  confirmedAt?: string | null
+  createdAt: string
+  source?: string
+}
+
+function liveToRow(m: LiveHermes): MomentRow {
+  let title = `${m.childName.split(' ')[0]} — learning moment`
+  let desc = m.transcription || m.domain
+  try {
+    const raw = m.rawHermesJson ? JSON.parse(m.rawHermesJson) : null
+    if (raw?.parentSafeTitle) title = raw.parentSafeTitle
+    if (raw?.parentSafeDesc) desc = raw.parentSafeDesc
+  } catch {
+    /* keep defaults */
+  }
+  return {
+    id: m.id,
+    childId: '',
+    childName: m.childName,
+    title,
+    desc,
+    domain: m.domain,
+    source: (m.source as MomentRow['source']) || 'voice',
+    status: 'delivered',
+    observationId: m.id,
+    createdAt: m.createdAt,
+    deliveredAt: m.confirmedAt || m.createdAt,
+    tag: 'Haeru Voice AI',
+  }
+}
+
 function feedSnapshot(role: string, selectedChildId: string): MomentRow[] {
   if (role === 'owner') return listAllDeliveredMoments()
   if (role === 'facilitator') {
@@ -26,11 +64,38 @@ function feedSnapshot(role: string, selectedChildId: string): MomentRow[] {
 
 function useFeedMoments(): MomentRow[] {
   const { role, selectedChildId } = useAppStore()
-  return useSyncExternalStore(
+  const legacy = useSyncExternalStore(
     subscribePulseStore,
     () => feedSnapshot(role, selectedChildId),
     () => feedSnapshot(role, selectedChildId),
   )
+  const [live, setLive] = useState<MomentRow[]>([])
+
+  useEffect(() => {
+    if (role !== 'parent' && role !== 'caregiver') {
+      setLive([])
+      return
+    }
+    let cancelled = false
+    void apiFetch<{ live?: LiveHermes[] }>(
+      `/parents/child/${encodeURIComponent(selectedChildId)}/moments`,
+    ).then((r) => {
+      if (cancelled) return
+      const rows = (r.data?.live ?? []).map(liveToRow)
+      setLive(rows)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [role, selectedChildId])
+
+  return useMemo(() => {
+    if (role === 'parent' || role === 'caregiver') {
+      const ids = new Set(live.map((m) => m.id))
+      return [...live, ...legacy.filter((m) => !ids.has(m.id))]
+    }
+    return legacy
+  }, [role, live, legacy])
 }
 
 function FeedEmpty({ subtitle }: { subtitle: string }) {
