@@ -160,7 +160,7 @@ export const CENTRES: CentreRecord[] = [
     maxChildren: 50,
     maxStaff: 12,
     enrolledCount: 45,
-    directorName: 'Choki Wangmo',
+    directorName: 'Karma Dechen',
     directorPhone: '+975-17123456',
     directorEmail: 'owner@wsh.bt',
     saasFeeNu: 4500,
@@ -315,7 +315,7 @@ export const DZONGKHAGS = [
 export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfig> = {
   owner: {
     label: 'Owner / Director',
-    userName: 'Choki Wangmo',
+    userName: 'Karma Dechen',
     userTitle: 'Owner',
     home: 'centres',
     nav: [
@@ -359,7 +359,7 @@ export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfi
   },
   facilitator: {
     label: 'Facilitator',
-    userName: 'Sonam Yangden',
+    userName: 'Kuenzang Tshomo',
     userTitle: 'Nursery facilitator',
     home: 'ftoday',
     nav: [
