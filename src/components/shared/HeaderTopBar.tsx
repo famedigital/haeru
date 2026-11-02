@@ -1,4 +1,4 @@
-import { Bell, Moon, Search, Sun } from 'lucide-react'
+import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
 import { ROOMS, ROLE_CONFIGS } from '../../data/enterprise'
 import { useAppStore } from '../../lib/store/appStore'
 import type { Role, RoomId } from '../../types/enterprise'
@@ -7,7 +7,11 @@ import { GlassChips } from '../ui/GlassChips'
 const ROOM_CHIPS = ['All rooms', 'Toddlers', 'Nursery', 'Kindergarten']
 const ROOM_IDS: Array<RoomId | 'all'> = ['all', 'toddlers', 'nursery', 'kg']
 
-export function HeaderTopBar() {
+type Props = {
+  onOpenNav?: () => void
+}
+
+export function HeaderTopBar({ onOpenNav }: Props) {
   const { role, roomFilter, setRoomFilter, screen, theme, toggleTheme, currentUser } = useAppStore()
   if (role === 'signin' || role === 'landing') return null
 
@@ -15,15 +19,24 @@ export function HeaderTopBar() {
   const displayFirst = (currentUser?.name || cfg.userName).split(' ')[0]
   const showRooms = role === 'owner' && (screen === 'children' || screen === 'today')
   const chipIndex = Math.max(0, ROOM_IDS.indexOf(roomFilter))
+  const facRoom = currentUser?.room && currentUser.room in ROOMS ? currentUser.room : 'kg'
 
   return (
     <header className="sticky top-0 z-40 flex flex-col gap-3 px-4 md:px-8 py-3 border-b border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl">
       <div className="flex items-center gap-3">
-        <div className="flex-1 max-w-md flex items-center gap-2 obsidian-pill rounded-xl px-3 py-2 text-[color:var(--text-muted)] text-sm">
-          <Search className="w-4 h-4" />
-          <span>Search by name or code…</span>
+        <button
+          type="button"
+          className="md:hidden w-10 h-10 shrink-0 rounded-xl obsidian-pill flex items-center justify-center text-[color:var(--text-muted)]"
+          aria-label="Open menu"
+          onClick={onOpenNav}
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+        <div className="flex-1 min-w-0 max-w-md flex items-center gap-2 obsidian-pill rounded-xl px-3 py-2 text-[color:var(--text-muted)] text-sm">
+          <Search className="w-4 h-4 shrink-0" />
+          <span className="truncate">Search by name or code…</span>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={toggleTheme}
@@ -31,7 +44,11 @@ export function HeaderTopBar() {
             aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             title={theme === 'dark' ? 'Sunrise light theme' : 'Midnight dark theme'}
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-700 dark:text-amber-300" /> : <Moon className="w-4 h-4 text-slate-600" />}
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-700 dark:text-amber-300" />
+            ) : (
+              <Moon className="w-4 h-4 text-slate-600" />
+            )}
           </button>
           <button
             type="button"
@@ -42,9 +59,7 @@ export function HeaderTopBar() {
             <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-400 border-2 border-[color:var(--pill-bg)]" />
           </button>
           <div className="obsidian-pill rounded-xl px-3 py-2 hidden sm:block">
-            <div className="text-xs font-bold text-slate-900 dark:text-white">
-              {displayFirst}
-            </div>
+            <div className="text-xs font-bold text-slate-900 dark:text-white">{displayFirst}</div>
             <div className="text-[10px] text-slate-500 dark:text-slate-400">{cfg.label}</div>
           </div>
         </div>
@@ -61,8 +76,10 @@ export function HeaderTopBar() {
       {role === 'facilitator' && (
         <div className="text-xs text-[color:var(--text-muted)]">
           Room filter locked to{' '}
-          <span className="text-amber-600 dark:text-amber-700 dark:text-amber-200 font-bold">{ROOMS.nursery.name}</span>{' '}
-          · {ROOMS.nursery.here} here today
+          <span className="text-amber-600 dark:text-amber-200 font-bold">
+            {ROOMS[facRoom]?.name || facRoom}
+          </span>{' '}
+          · your assigned room
         </div>
       )}
     </header>

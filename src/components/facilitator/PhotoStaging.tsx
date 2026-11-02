@@ -1,6 +1,6 @@
 import { Camera, CloudUpload } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { CHILDREN, childFirstName } from '../../data/enterprise'
+import { useEffect, useMemo, useState } from 'react'
+import { childFirstName } from '../../data/enterprise'
 import {
   postConfirmMoment,
   postObservationFromHermes,
@@ -9,6 +9,7 @@ import {
   parseChildTagsFromCaption,
   stripTagsFromCaption,
 } from '../../lib/media/captionTags'
+import { apiFetch } from '../../lib/api/httpClient'
 import { useAppStore } from '../../lib/store/appStore'
 import { GlassBadge, GlassButton, GlassCard } from '../ui'
 import { PageHeader } from '../shared/PageHeader'
@@ -32,29 +33,51 @@ const DEMO_MEDIA = [
   },
 ] as const
 
-const ROSTER = CHILDREN.map((c) => ({ id: c.id, name: c.name }))
+type LiveChild = {
+  id: string
+  name: string
+  feedConsent?: boolean
+  photoConsentFeed?: boolean
+}
 
 export function PhotoStaging() {
-  const { showToast } = useAppStore()
+  const { showToast, currentUser } = useAppStore()
+  const room = currentUser?.room || 'kg'
+  const [roster, setRoster] = useState<LiveChild[]>([])
   const [mediaIdx, setMediaIdx] = useState(0)
   const [caption, setCaption] = useState(
-    '@Kinley @Pema Rainbow hands today — mixing colours to make green.',
+    '@Kinley Rainbow hands today — mixing colours to make green.',
   )
   const [busy, setBusy] = useState(false)
 
+  useEffect(() => {
+    let cancelled = false
+    void apiFetch<LiveChild[]>(`/children?room=${encodeURIComponent(room)}`).then((r) => {
+      if (cancelled) return
+      setRoster(r.ok && r.data ? r.data : [])
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [room])
+
   const media = DEMO_MEDIA[mediaIdx] ?? DEMO_MEDIA[0]
+  const rosterForTags = useMemo(
+    () => roster.map((c) => ({ id: c.id, name: c.name })),
+    [roster],
+  )
   const tagged = useMemo(
-    () => parseChildTagsFromCaption(caption, ROSTER),
-    [caption],
+    () => parseChildTagsFromCaption(caption, rosterForTags),
+    [caption, rosterForTags],
   )
   const noConsent = tagged.filter((t) => {
-    const child = CHILDREN.find((c) => c.id === t.id)
-    return child && !child.feedConsent
+    const child = roster.find((c) => c.id === t.id)
+    return child && !(child.feedConsent ?? child.photoConsentFeed)
   })
 
   const sendToDirector = () => {
     if (tagged.length === 0) {
-      showToast('Add @ChildName tags in the caption (e.g. @Kinley @Pema)')
+      showToast('Add @ChildName tags in the caption (e.g. @Kinley)')
       return
     }
     if (noConsent.length > 0) {
@@ -176,16 +199,18 @@ export function PhotoStaging() {
 
           <div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-              Matched children ({tagged.length})
+              Matched children ({tagged.length}
+              {roster.length ? ` · ${roster.length} in room` : ''})
             </div>
             <div className="flex flex-wrap gap-2">
               {tagged.length === 0 ? (
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  No tags yet — try @Kinley @Pema
+                  No tags yet — try @Kinley
                 </span>
               ) : (
                 tagged.map((c) => {
-                  const consent = CHILDREN.find((x) => x.id === c.id)?.feedConsent
+                  const live = roster.find((x) => x.id === c.id)
+                  const consent = live?.feedConsent ?? live?.photoConsentFeed
                   return (
                     <GlassBadge key={c.id} tone={consent ? 'ap' : 'nya'}>
                       {childFirstName(c.name)}
@@ -211,10 +236,7 @@ export function PhotoStaging() {
           </div>
 
           <div className="flex justify-end gap-2">
-            <GlassButton
-              disabled={busy}
-              onClick={sendToDirector}
-            >
+            <GlassButton disabled={busy} onClick={sendToDirector}>
               {busy ? 'Queuing…' : 'Send to Director queue'}
             </GlassButton>
           </div>

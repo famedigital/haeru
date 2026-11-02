@@ -53,7 +53,7 @@ const SCENARIOS: Scenario[] = [
     ],
     parentView:
       'Tashi counted 5 blocks and shared with a classmate today. Delivered to Mummy Deki with 100% child-scoped privacy.',
-    director: 'Confirmed by Director Choki in 1 tap',
+    director: 'Confirmed by Director Karma Dechen in 1 tap',
     photoCaption: 'Block arch · morning play',
   },
   {
@@ -81,7 +81,7 @@ const SCENARIOS: Scenario[] = [
     ],
     parentView:
       'Tashi practiced Dzongkha greetings and listened to a Losar story. Delivered to Mummy Deki with 100% child-scoped privacy.',
-    director: 'Confirmed by Director Choki in 1 tap',
+    director: 'Confirmed by Director Karma Dechen in 1 tap',
     photoCaption: 'Circle time · Dzongkha bridge',
   },
   {
@@ -103,7 +103,7 @@ const SCENARIOS: Scenario[] = [
     ],
     parentView:
       'Tashi finished lunch and napped peacefully for 45 minutes. Delivered to Mummy Deki with 100% child-scoped privacy.',
-    director: 'Confirmed by Director Choki in 1 tap',
+    director: 'Confirmed by Director Karma Dechen in 1 tap',
     photoCaption: 'Quiet rest · cozy mat',
   },
 ]
@@ -208,7 +208,7 @@ export default function HaeruVoiceDemo() {
 
           <div className="flex-1 bg-slate-100/80 dark:bg-slate-950/50 p-4 space-y-3 min-h-[320px]">
             <p className="text-center text-[10px] text-slate-500 dark:text-slate-400">
-              Tr. Sonam · Kindergarten · today
+              Tr. Kuenzang · Kindergarten · today
             </p>
 
             <div className="max-w-[92%] ml-auto rounded-2xl rounded-br-md bg-[#effdde] dark:bg-emerald-950/50 border border-emerald-500/20 px-3 py-2.5 space-y-2 shadow-sm">
@@ -227,7 +227,7 @@ export default function HaeruVoiceDemo() {
                 </span>
               </button>
               <p className="text-[11px] font-semibold text-slate-800 dark:text-slate-100">
-                🎙️ {scenario.duration} · Voice Note from Tr. Sonam
+                🎙️ {scenario.duration} · Voice Note from Tr. Kuenzang
               </p>
               <p
                 key={scenario.id + '-tx'}
@@ -254,7 +254,7 @@ export default function HaeruVoiceDemo() {
             </div>
 
             <div className="max-w-[80%] rounded-2xl rounded-bl-md bg-white/90 dark:bg-slate-900/80 border border-slate-200/70 dark:border-white/10 px-3 py-2 text-xs text-slate-700 dark:text-slate-200">
-              Got it, Tr. Sonam — extracting care + MoESD ELDS for Director review…
+              Got it, Tr. Kuenzang — extracting care + MoESD ELDS for Director review…
             </div>
           </div>
         </GlassCard>

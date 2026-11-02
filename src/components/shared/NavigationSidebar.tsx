@@ -21,6 +21,7 @@ import {
   Users,
   Wallet,
   Repeat,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import { ROLE_CONFIGS } from '../../data/enterprise'
@@ -101,7 +102,12 @@ function sectionFromLabel(label: string, role: Role): SectionKey {
   return 'operations'
 }
 
-export function NavigationSidebar() {
+type Props = {
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+}
+
+export function NavigationSidebar({ mobileOpen = false, onMobileClose }: Props) {
   const {
     role,
     screen,
@@ -123,23 +129,40 @@ export function NavigationSidebar() {
     .slice(0, 2)
     .toUpperCase()
 
-  return (
-    <aside className="hidden md:flex w-64 shrink-0 flex-col gap-4 p-4 border-r border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl sticky top-0 h-screen overflow-y-auto">
-      <div className="flex flex-col gap-1 px-2 pt-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <HaeruAvatar size="sm" expression="happy" />
-          <span className="display text-lg font-bold bg-gradient-to-r from-teal-400 via-blue-400 to-violet-400 bg-clip-text text-transparent">
-            haeru
-          </span>
+  const go = (id: string) => {
+    setScreen(id)
+    onMobileClose?.()
+  }
+
+  const panel = (
+    <div className="flex h-full w-64 flex-col gap-4 p-4 overflow-y-auto">
+      <div className="flex items-start justify-between gap-2 px-2 pt-2">
+        <div className="flex flex-col gap-1 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <HaeruAvatar size="sm" expression="happy" />
+            <span className="display text-lg font-bold bg-gradient-to-r from-teal-400 via-blue-400 to-violet-400 bg-clip-text text-transparent">
+              haeru
+            </span>
+          </div>
+          <div className="pl-[42px]">
+            <b className="block text-xs text-slate-900 dark:text-white leading-tight">
+              {currentCentre?.name || 'Haeru ECCD'}
+            </b>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              {currentCentre?.place || currentCentre?.city || 'Bhutan'}
+            </span>
+          </div>
         </div>
-        <div className="pl-[42px]">
-          <b className="block text-xs text-slate-900 dark:text-white leading-tight">
-            {currentCentre?.name || 'Haeru ECCD'}
-          </b>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">
-            {currentCentre?.place || currentCentre?.city || 'Bhutan'}
-          </span>
-        </div>
+        {onMobileClose ? (
+          <button
+            type="button"
+            className="md:hidden w-9 h-9 rounded-xl obsidian-pill flex items-center justify-center text-slate-600 dark:text-slate-300"
+            aria-label="Close menu"
+            onClick={onMobileClose}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        ) : null}
       </div>
 
       <nav className="flex flex-col gap-3 flex-1">
@@ -167,7 +190,7 @@ export function NavigationSidebar() {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setScreen(item.id)}
+                    onClick={() => go(item.id)}
                     className={cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-bold transition-all duration-150 w-full active:scale-[0.985]',
                       on
@@ -209,7 +232,7 @@ export function NavigationSidebar() {
             type="button"
             onClick={() => {
               showToast(`${displayName} · ${displayRole}`)
-              setScreen(role === 'owner' ? 'settings' : role === 'parent' ? 'child' : 'ftoday')
+              go(role === 'owner' ? 'settings' : role === 'parent' ? 'child' : 'ftoday')
             }}
             className="obsidian-pill rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1.5 hover:bg-white/10"
           >
@@ -219,7 +242,10 @@ export function NavigationSidebar() {
           <button
             type="button"
             onClick={() => {
-              if (window.confirm('Sign out of Haeru?')) logout()
+              if (window.confirm('Sign out of Haeru?')) {
+                onMobileClose?.()
+                logout()
+              }
             }}
             className="obsidian-pill rounded-xl px-3 py-2 text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center justify-center gap-1.5 hover:bg-rose-500/10"
           >
@@ -228,6 +254,40 @@ export function NavigationSidebar() {
           </button>
         </div>
       </div>
-    </aside>
+    </div>
+  )
+
+  return (
+    <>
+      <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl sticky top-0 h-screen">
+        {panel}
+      </aside>
+
+      <div
+        className={cn(
+          'md:hidden fixed inset-0 z-50 transition',
+          mobileOpen ? 'pointer-events-auto' : 'pointer-events-none',
+        )}
+        aria-hidden={!mobileOpen}
+      >
+        <button
+          type="button"
+          className={cn(
+            'absolute inset-0 bg-slate-950/50 backdrop-blur-sm transition-opacity',
+            mobileOpen ? 'opacity-100' : 'opacity-0',
+          )}
+          aria-label="Dismiss menu"
+          onClick={onMobileClose}
+        />
+        <aside
+          className={cn(
+            'absolute inset-y-0 left-0 w-[min(18rem,88vw)] border-r border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl shadow-2xl transition-transform duration-200',
+            mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          )}
+        >
+          {panel}
+        </aside>
+      </div>
+    </>
   )
 }

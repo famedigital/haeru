@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { CHILDREN, formatNu, PARENT_CHILD_ID, childFirstName } from '../../data/enterprise'
-import { KINLEY_RADAR_SERIES } from '../../lib/elds/domains'
+import { formatNu, childFirstName } from '../../data/enterprise'
 import { apiFetch } from '../../lib/api/httpClient'
 import { useAppStore } from '../../lib/store/appStore'
-import { GlassBadge, GlassButton, GlassCard, RadarChart3D } from '../ui'
+import { GlassBadge, GlassButton, GlassCard } from '../ui'
 
 type LiveMoment = {
   id: string
@@ -19,7 +18,6 @@ type LiveMoment = {
 type ParentSafe = {
   parentSafeTitle?: string
   parentSafeDesc?: string
-  transcription?: string
 }
 
 function parseSafe(m: LiveMoment): ParentSafe {
@@ -30,26 +28,41 @@ function parseSafe(m: LiveMoment): ParentSafe {
   }
 }
 
+/** Prefer Director-approved parent copy; never fall back to raw STT garbage. */
+function parentFacingCopy(m: LiveMoment, first: string): { title: string; desc: string } {
+  const s = parseSafe(m)
+  const title = s.parentSafeTitle || `${first} had a learning moment today`
+  const desc =
+    s.parentSafeDesc ||
+    `${first} was observed during class — a classmate-safe summary for the family.`
+  return { title, desc }
+}
+
 export function DailyReflection({ caregiver = false }: { caregiver?: boolean }) {
   const { setScreen, openChild, selectedChildId } = useAppStore()
-  const childId = selectedChildId || PARENT_CHILD_ID
-  const mock = CHILDREN.find((c) => c.id === childId) ?? CHILDREN.find((c) => c.id === PARENT_CHILD_ID)!
-  const [liveName, setLiveName] = useState(mock.name)
+  const childId = selectedChildId
+  const [liveName, setLiveName] = useState('Child')
   const [moments, setMoments] = useState<LiveMoment[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!childId) {
+      setLoading(false)
+      return
+    }
     let cancelled = false
     setLoading(true)
-    void apiFetch<{ live?: LiveMoment[] }>(`/parents/child/${encodeURIComponent(childId)}/moments`).then(
-      (r) => {
-        if (cancelled) return
-        const live = r.ok && r.data?.live ? r.data.live : []
-        setMoments(live)
-        if (live[0]?.childName) setLiveName(live[0].childName)
-        setLoading(false)
-      },
-    )
+    void Promise.all([
+      apiFetch<{ name?: string }>(`/children/${encodeURIComponent(childId)}`),
+      apiFetch<{ live?: LiveMoment[] }>(`/parents/child/${encodeURIComponent(childId)}/moments`),
+    ]).then(([childRes, momRes]) => {
+      if (cancelled) return
+      if (childRes.ok && childRes.data?.name) setLiveName(childRes.data.name)
+      const live = momRes.ok && momRes.data?.live ? momRes.data.live : []
+      setMoments(live)
+      if (!childRes.data?.name && live[0]?.childName) setLiveName(live[0].childName)
+      setLoading(false)
+    })
     return () => {
       cancelled = true
     }
@@ -62,26 +75,22 @@ export function DailyReflection({ caregiver = false }: { caregiver?: boolean }) 
     return d.toDateString() === now.toDateString()
   })
   const latest = today[0] ?? moments[0]
-  const safe = latest ? parseSafe(latest) : null
+  const hero = latest ? parentFacingCopy(latest, first) : null
 
   return (
     <div className="space-y-6">
       <GlassCard padding="lg">
-        <GlassBadge tone="ap">
-          {first} · Kindergarten
-        </GlassBadge>
+        <GlassBadge tone="ap">{first} · Kindergarten</GlassBadge>
         <h1 className="text-2xl text-slate-900 dark:text-white mt-3">
-          {latest
-            ? safe?.parentSafeTitle || `${first} had a learning moment today`
+          {hero
+            ? hero.title
             : loading
               ? `${first}'s day…`
               : `${first} · waiting for today's school update`}
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 max-w-xl">
-          {latest
-            ? safe?.parentSafeDesc ||
-              latest.transcription ||
-              `${first} had a classroom moment. Details shared after Director review.`
+          {hero
+            ? hero.desc
             : loading
               ? 'Loading Haeru Voice AI updates…'
               : `When a teacher sends a voice note and the Director confirms it, ${first}'s update appears here.`}
@@ -95,8 +104,8 @@ export function DailyReflection({ caregiver = false }: { caregiver?: boolean }) 
 
       {caregiver ? (
         <div className="obsidian-pill rounded-xl px-4 py-3 text-sm text-violet-700 dark:text-violet-200 border border-violet-400/30">
-          You&apos;re an approved caregiver for {first}. Pickup and medical
-          details are shared. <b>Fees stay private to parents.</b>
+          You&apos;re an approved caregiver for {first}. Pickup and medical details are shared.{' '}
+          <b>Fees stay private to parents.</b>
         </div>
       ) : (
         <GlassCard
@@ -125,7 +134,7 @@ export function DailyReflection({ caregiver = false }: { caregiver?: boolean }) 
           ) : (
             <ul className="space-y-3">
               {(today.length ? today : latest ? [latest] : []).map((m) => {
-                const s = parseSafe(m)
+                const copy = parentFacingCopy(m, first)
                 return (
                   <li
                     key={m.id}
@@ -137,17 +146,8 @@ export function DailyReflection({ caregiver = false }: { caregiver?: boolean }) 
                         {new Date(m.confirmedAt || m.createdAt).toLocaleTimeString()}
                       </span>
                     </div>
-                    <b className="block text-sm text-slate-900 dark:text-white">
-                      {s.parentSafeTitle || m.domain}
-                    </b>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">
-                      {s.parentSafeDesc || m.transcription}
-                    </p>
-                    {m.transcription ? (
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
-                        Heard: “{m.transcription}”
-                      </p>
-                    ) : null}
+                    <b className="block text-sm text-slate-900 dark:text-white">{copy.title}</b>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">{copy.desc}</p>
                   </li>
                 )
               })}
@@ -158,21 +158,10 @@ export function DailyReflection({ caregiver = false }: { caregiver?: boolean }) 
         <div className="space-y-4">
           <GlassCard padding="lg">
             <h2 className="text-lg text-slate-900 dark:text-white mb-3">Coming up</h2>
-            {[
-              ['14', 'Oct', 'Blessed Rainy Day dance', '10 am · families welcome'],
-              ['10', 'Oct', 'Parent–teacher meeting', '2:30 pm'],
-            ].map(([d, m, t, s]) => (
-              <div key={t} className="flex gap-3 py-2 border-b border-white/5 last:border-0">
-                <div className="obsidian-pill w-12 rounded-xl text-center py-1.5">
-                  <div className="display text-lg text-slate-900 dark:text-white leading-none">{d}</div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400">{m}</div>
-                </div>
-                <div>
-                  <b className="text-slate-900 dark:text-white text-sm">{t}</b>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{s}</div>
-                </div>
-              </div>
-            ))}
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Centre calendar sync arrives in the next sprint. Ask the Director for this week&apos;s
+              school events.
+            </p>
           </GlassCard>
           <GlassCard padding="lg" className="space-y-3">
             <div className="flex items-center justify-between">
@@ -180,26 +169,18 @@ export function DailyReflection({ caregiver = false }: { caregiver?: boolean }) 
               <button
                 type="button"
                 className="text-xs font-bold text-emerald-700 dark:text-emerald-300"
-                onClick={() => openChild(childId)}
+                onClick={() => childId && openChild(childId)}
               >
                 Open profile →
               </button>
             </div>
-            {!caregiver && (
-              <button type="button" className="w-full text-left" onClick={() => setScreen('pprogress')}>
-                <RadarChart3D
-                  series={[KINLEY_RADAR_SERIES[2]!]}
-                  size={240}
-                  title="Progress snapshot"
-                  showWindowFilter={false}
-                />
-              </button>
-            )}
-            {caregiver && (
-              <GlassButton variant="soft" className="w-full" onClick={() => setScreen('pprogress')}>
-                See development domains
-              </GlassButton>
-            )}
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              MoESD ELDS domains update when facilitators record checklists or Director-confirmed
+              Haeru Voice AI moments land.
+            </p>
+            <GlassButton variant="soft" className="w-full" onClick={() => setScreen('pprogress')}>
+              See development domains
+            </GlassButton>
           </GlassCard>
         </div>
       </div>

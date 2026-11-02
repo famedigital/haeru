@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { AppStoreProvider, useAppStore } from '../lib/store/appStore'
 import { createIdleWatcher, isSensitiveScreen } from '../lib/security/idleLock'
 import { NavigationSidebar } from '../components/shared/NavigationSidebar'
@@ -116,6 +116,7 @@ function ScreenRouter() {
 
 function ShellInner() {
   const { role, screen, setRole, showToast, isImpersonating } = useAppStore()
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   useEffect(() => {
     if (role !== 'owner' || !isSensitiveScreen(screen) || isImpersonating) return
@@ -124,6 +125,10 @@ function ShellInner() {
       setRole('signin')
     })
   }, [role, screen, setRole, showToast, isImpersonating])
+
+  useEffect(() => {
+    setMobileNavOpen(false)
+  }, [role, screen])
 
   if (role === 'landing' || role === 'signin') {
     return (
@@ -138,9 +143,12 @@ function ShellInner() {
   return (
     <div className={cn('wsh-canvas min-h-screen flex', isImpersonating && 'pt-12')}>
       <ImpersonationBanner />
-      <NavigationSidebar />
+      <NavigationSidebar
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
+      />
       <div className="flex-1 min-w-0 flex flex-col">
-        <HeaderTopBar />
+        <HeaderTopBar onOpenNav={() => setMobileNavOpen(true)} />
         <main className="flex-1 px-4 md:px-8 py-6 pb-28 max-w-[1240px] w-full mx-auto">
           <ScreenRouter />
         </main>

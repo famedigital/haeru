@@ -1,22 +1,43 @@
-import { CHILDREN, PARENT_CHILD_ID, childFirstName } from '../../data/enterprise'
+import { useEffect, useState } from 'react'
+import { childFirstName } from '../../data/enterprise'
+import { apiFetch } from '../../lib/api/httpClient'
 import { ChildProgressPanel } from '../shared/ChildProgressPanel'
 import { PageHeader } from '../shared/PageHeader'
 import { useAppStore } from '../../lib/store/appStore'
 
+type LiveChild = {
+  id: string
+  name: string
+  age?: string
+}
+
 export function ELDSRadarView() {
-  const { selectedChildId, role } = useAppStore()
-  const child =
-    CHILDREN.find((c) => c.id === selectedChildId) ??
-    CHILDREN.find((c) => c.id === PARENT_CHILD_ID)!
+  const { selectedChildId, role, showToast } = useAppStore()
+  const [name, setName] = useState('Child')
+
+  useEffect(() => {
+    if (!selectedChildId) return
+    let cancelled = false
+    void apiFetch<LiveChild>(`/children/${encodeURIComponent(selectedChildId)}`).then((r) => {
+      if (cancelled) return
+      if (r.ok && r.data?.name) setName(r.data.name)
+      else showToast('Could not load child for progress view')
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedChildId, showToast])
+
+  const first = childFirstName(name)
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${childFirstName(child.name)}'s progress`}
-        subtitle="4-year checklist · Bhutan MoESD ELDS 2019"
+        title={`${first}'s progress`}
+        subtitle="Live checklist · Bhutan MoESD ELDS 2019"
       />
       <ChildProgressPanel
-        childFirstName={childFirstName(child.name)}
+        childFirstName={first}
         staff={role === 'owner' || role === 'facilitator'}
       />
     </div>

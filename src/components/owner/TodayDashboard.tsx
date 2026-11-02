@@ -5,20 +5,26 @@ import { cn } from '../../lib/utils/cn'
 import { GlassButton, GlassCard, GlassBadge } from '../ui'
 
 export function TodayDashboard() {
-  const { setScreen } = useAppStore()
+  const { setScreen, currentUser } = useAppStore()
+  const firstName = (currentUser?.name || 'Director').split(' ')[0]
+  const todayLabel = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date())
 
   return (
     <div className="space-y-6">
       <GlassCard padding="lg" className="relative overflow-hidden glass-panel-rainbow">
         <div className="obsidian-pill inline-flex rounded-full px-3 py-1 text-xs text-teal-700 dark:text-teal-300 mb-3">
-          Thursday, 9 October
+          {todayLabel}
         </div>
         <h1 className="display text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 dark:from-white dark:via-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-          Good morning, Choki 👋
+          Good morning, {firstName}
         </h1>
         <p className="text-slate-600 dark:text-slate-300 mt-2 max-w-xl text-sm leading-relaxed">
-          40 of 45 children are here today. The Oct–Nov observation window is open and 3 parent
-          payments are waiting for your check.
+          Review ELDS confirmations, check today&apos;s rooms, and clear parent payments waiting for
+          your check.
         </p>
       </GlassCard>
 

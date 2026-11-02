@@ -11,7 +11,7 @@ const CHAPTER_MS = 5000
 
 const EASTER_EGGS = [
   "Tashi says: 'Haeru, look at my drawing!' 🎨",
-  'Tr. Sonam confirmed today’s reflection in 1 tap!',
+  'Tr. Kuenzang confirmed today’s reflection in 1 tap!',
   "100% child-scoped. No other parent sees Tashi’s day.",
 ]
 
@@ -44,7 +44,7 @@ const CHAPTERS: Chapter[] = [
     scrubber: '🧩 11:00 AM · Wonder',
     expression: 'bringing',
     quote:
-      'Look what Tashi built! A 6-block wooden bridge. Tr. Sonam recorded a 10s voice note — Haeru Voice AI mapped it to ELDS Milestone 4.2!',
+      'Look what Tashi built! A 6-block wooden bridge. Tr. Kuenzang recorded a 10s voice note — Haeru Voice AI mapped it to ELDS Milestone 4.2!',
     badge: 'ELDS Observation',
     cardTitle: 'Approaches to Learning · Achieved (ap)',
     tags: ['Domain: Approaches', 'Rating: ap 🌿', 'Haeru Voice AI'],
@@ -66,7 +66,7 @@ const CHAPTERS: Chapter[] = [
     scrubber: '🔒 3:30 PM · Delivery',
     expression: 'bringing',
     quote:
-      'Director Choki verified today’s notes! Delivering Tashi’s private reflection directly to Mummy Deki. Zero other eyes see this.',
+      'Director Karma Dechen verified today’s notes! Delivering Tashi’s private reflection directly to Mummy Deki. Zero other eyes see this.',
     badge: 'Private Delivery',
     cardTitle: 'Child-scoped to Deki Choden',
     tags: ['Delivered 📱', 'Child-Scoped 🔒', 'Director confirmed ✅'],
