@@ -1,0 +1,258 @@
+// Bhutan ECCD Enterprise — Haeru Pulse
+// Pilot: SQLite file on persistent volume. String fields stand in for enums.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Centre {
+  id           String         @id @default(uuid())
+  code         String         @unique @default("WSH")
+  name         String
+  place        String
+  /// bob | bnb
+  bank         String         @default("bob")
+  accountNo    String         @default("")
+  payeeName    String         @default("")
+  emvStatic    String         @default("")
+  city         String         @default("Thimphu")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  users        User[]
+  children     Child[]
+  hermesMoments HermesMoment[]
+}
+
+model User {
+  id              String            @id @default(uuid())
+  name            String
+  /// owner | facilitator | parent | caregiver
+  role            String
+  email           String?           @unique
+  phone           String            @unique
+  /// Demo UAT password (plain for local only)
+  password        String?
+  pinHash         String?
+  passkeyId       String?
+  /// toddlers | nursery | kg
+  room            String?
+  /// Tenant partition — Centre.id (seed uses id=WSH for demo centre)
+  centreId        String            @default("WSH")
+  telegramUserId  String?           @unique
+  telegramChatId  String?           @unique
+  pairingToken    String?           @unique
+  createdAt       DateTime          @default(now())
+  centre          Centre            @relation(fields: [centreId], references: [id])
+  guardianLinks   ChildGuardian[]
+  facilitatorLogs DailyCareLog[]    @relation("TeacherCareLogs")
+  observations    EldsObservation[] @relation("TeacherObservations")
+  confirmedObs    EldsObservation[] @relation("OwnerConfirmations")
+  leaveRequests   LeaveRequest[]
+  paymentReports  PaymentReport[]
+
+  @@index([centreId, role])
+}
+
+model Child {
+  id                 String            @id @default(uuid())
+  code               String            @unique
+  name               String
+  /// toddlers | nursery | kg
+  room               String
+  dob                DateTime
+  gender             String
+  photoConsentFeed   Boolean           @default(true)
+  photoConsentSocial Boolean           @default(true)
+  allergies          String?
+  medication         String?
+  napRoutine         String?
+  toiletStatus       String?
+  motherTongue       String?
+  doctorInfo         String?
+  centreId           String            @default("WSH")
+  centre             Centre            @relation(fields: [centreId], references: [id])
+  guardians          ChildGuardian[]
+  careLogs           DailyCareLog[]
+  observations       EldsObservation[]
+  feePlans           ChildFeePlan[]
+  invoices           Invoice[]
+  moments            Moment[]
+  hermesMoments      HermesMoment[]
+  pickupLogs         PickupLog[]
+
+  @@index([centreId, room])
+}
+
+model ChildGuardian {
+  id             String  @id @default(uuid())
+  childId        String
+  userId         String
+  relation       String
+  isPrimary      Boolean @default(false)
+  canViewFinance Boolean @default(true)
+  canPickup      Boolean @default(true)
+  child          Child   @relation(fields: [childId], references: [id])
+  user           User    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([childId])
+}
+
+model DailyCareLog {
+  id            String   @id @default(uuid())
+  childId       String
+  date          DateTime @default(now())
+  meals         String
+  napMins       Int      @default(0)
+  mood          String
+  toilet        String
+  teacherQuote  String?
+  facilitatorId String
+  child         Child    @relation(fields: [childId], references: [id])
+  facilitator   User     @relation("TeacherCareLogs", fields: [facilitatorId], references: [id])
+
+  @@index([childId, date])
+}
+
+model EldsObservation {
+  id            String    @id @default(uuid())
+  childId       String
+  window        String
+  domain        String
+  indicator     String
+  /// ap | bl | nya
+  rating        String
+  remark        String?
+  source        String    @default("manual")
+  rawRef        String?
+  facilitatorId String
+  confirmedById String?
+  isConfirmed   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  confirmedAt   DateTime?
+  child         Child     @relation(fields: [childId], references: [id])
+  facilitator   User      @relation("TeacherObservations", fields: [facilitatorId], references: [id])
+  confirmedBy   User?     @relation("OwnerConfirmations", fields: [confirmedById], references: [id])
+
+  @@index([childId, window])
+  @@index([isConfirmed])
+}
+
+model ChildFeePlan {
+  id               String  @id @default(uuid())
+  childId          String
+  academicYear     Int     @default(2026)
+  planType         String
+  isMidYear        Boolean @default(false)
+  catchUpAmt       Float?
+  extraDiscountPct Float   @default(0)
+  extraReason      String?
+  hasExtendedTime  Boolean @default(false)
+  hasPottyTraining Boolean @default(false)
+  uniformItems     String  @default("[]")
+  isFinalised      Boolean @default(false)
+  child            Child   @relation(fields: [childId], references: [id])
+}
+
+model Invoice {
+  id              String          @id @default(uuid())
+  invoiceNo       String          @unique
+  childId         String
+  dueDate         DateTime
+  /// draft | issued | partial | paid | overdue
+  status          String          @default("issued")
+  totalAmt        Float
+  isAutoGenerated Boolean         @default(false)
+  note            String?
+  createdAt       DateTime        @default(now())
+  child           Child           @relation(fields: [childId], references: [id])
+  items           InvoiceItem[]
+  payments        PaymentReport[]
+}
+
+model InvoiceItem {
+  id          String  @id @default(uuid())
+  invoiceId   String
+  feeHead     String
+  description String
+  amount      Float
+  invoice     Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model PaymentReport {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  parentId    String
+  amount      Float
+  /// mBoB | mPay | bank_transfer | cash
+  method      String
+  journalNo   String
+  screenshot  String?
+  isConfirmed Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  parent      User     @relation(fields: [parentId], references: [id])
+}
+
+model PickupLog {
+  id         String   @id @default(uuid())
+  childId    String
+  pickupTime DateTime @default(now())
+  personName String
+  relation   String
+  child      Child    @relation(fields: [childId], references: [id])
+}
+
+model LeaveRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  startDate DateTime
+  endDate   DateTime
+  reason    String
+  status    String   @default("pending")
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Moment {
+  id         String   @id @default(uuid())
+  childId    String
+  caption    String
+  mediaUrls  String   @default("[]")
+  likesCount Int      @default(0)
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  child      Child    @relation(fields: [childId], references: [id])
+
+  @@index([childId, status])
+}
+
+/// Haeru Voice AI moments (internal pipeline codename: Hermes)
+model HermesMoment {
+  id              String    @id @default(uuid())
+  centreId        String    @default("WSH")
+  telegramMsgId   Int?
+  telegramChatId  String?
+  transcription   String?
+  rawHermesJson   String
+  childId         String?
+  childName       String
+  domain          String
+  source          String    @default("voice")
+  /// pending_director | delivered | rejected
+  status          String    @default("pending_director")
+  facilitatorTgId String?
+  confirmedById   String?
+  confirmedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  child           Child?    @relation(fields: [childId], references: [id])
+  centre          Centre    @relation(fields: [centreId], references: [id])
+
+  @@index([centreId, status])
+  @@index([childId])
+}

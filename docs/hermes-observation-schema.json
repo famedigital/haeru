@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eccd.bt/schemas/hermes-observation.json",
+  "title": "BhutanECCDHermesObservation",
+  "description": "Structured observation Hermes posts to Pulse API (POST /observations/from-hermes).",
+  "type": "object",
+  "required": [
+    "childName",
+    "domain",
+    "trigger",
+    "strategy",
+    "milestone",
+    "confidence",
+    "source"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "childId": {
+      "type": "string",
+      "description": "Stable Pulse child id when known (e.g. c1). Optional if childName resolves uniquely."
+    },
+    "childName": {
+      "type": "string",
+      "minLength": 1,
+      "examples": ["Tashi Dorji"]
+    },
+    "domain": {
+      "type": "string",
+      "description": "MoESD ELDS domain or close mapping",
+      "examples": ["Social & Emotional Development"]
+    },
+    "trigger": {
+      "type": "string",
+      "description": "Behavioral trigger or 'None (Positive Reinforcement)'"
+    },
+    "strategy": {
+      "type": "string",
+      "description": "Facilitator strategy observed or recommended"
+    },
+    "milestone": {
+      "type": "string",
+      "description": "ELDS-aligned milestone progress statement"
+    },
+    "confidence": {
+      "type": "string",
+      "description": "Human-readable confidence / standard match note",
+      "examples": ["96% match with MoESD ELDS Standard 3.2"]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["voice", "photo", "cctv"]
+    },
+    "transcription": {
+      "type": "string",
+      "description": "Raw or cleaned voice transcription when source=voice"
+    },
+    "parentSafeTitle": {
+      "type": "string",
+      "description": "Warm title for the guardian; must not name other children"
+    },
+    "parentSafeDesc": {
+      "type": "string",
+      "description": "Parent-facing description; no other children's names"
+    },
+    "rawRef": {
+      "type": "string",
+      "description": "Optional pointer to Telegram file_id, object storage key, or CCTV clip id"
+    },
+    "mediaUrls": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "description": "Cloudinary (or other CDN) URLs after upload. For multi-child Telegram captions, POST /media/photo-from-hermes once with the same URLs fan-out per @tag."
+    }
+  },
+  "examples": [
+    {
+      "childId": "c1",
+      "childName": "Tashi Dorji",
+      "domain": "Social & Emotional Development",
+      "trigger": "Group noise overload & resource sharing boundary",
+      "strategy": "Calm hand gesture + Soft Dzongkha verbal soothing",
+      "milestone": "Shares play materials with peer after soft prompt (Emerging -> Proficient)",
+      "confidence": "96% match with MoESD ELDS Standard 3.2",
+      "source": "voice",
+      "transcription": "Today during morning group activities... Tashi Dorji...",
+      "parentSafeTitle": "Tashi practiced sharing today",
+      "parentSafeDesc": "Tashi offered blocks to a friend after a calm prompt — great Social & Emotional progress."
+    }
+  ]
+}

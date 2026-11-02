@@ -1,0 +1,15 @@
+# Bhutan ECCD (WSH + Haeru) — Cursor pointer
+
+Strict rules live in **`.cursor/rules/*.mdc`** and **`AGENTS.md`**.
+
+## Enterprise Score gate
+Average ≥ 9.0 · no dimension &lt; 8 · critical (Theme/A11y, Privacy/ELDS, Frontend TS, Backend/Hermes) each ≥ 9. Paste scorecard when done.
+
+## Quick MUST NOTs
+- Bare `text-white` on frosted glass · `rotateX`/`rotateY` tilts
+- Parent classroom feeds · caregiver seeing fees
+- ELDS/Hermes to parents before Director confirm
+- Secrets in the frontend · schema drift from `docs/hermes-observation-schema.json`
+
+## Canonical docs
+`docs/CURSOR_BUILD_PLAN.md` · `docs/ENTERPRISE_FULLSTACK_SPEC.md` · `docs/architecture.md` · `docs/hermes/`

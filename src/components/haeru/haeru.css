@@ -1,0 +1,423 @@
+/* Haeru character motion — original soft guardian companion (not religious iconography) */
+
+:root {
+  --haeru-rainbow-violet: #e9d5ff;
+  --haeru-rainbow-rose: #fbcfe8;
+  --haeru-rainbow-gold: #fef08a;
+  --haeru-rainbow-teal: #a7f3d0;
+  --haeru-rainbow-azure: #bae6fd;
+  --haeru-rainbow-cream: #fffbeb;
+  --haeru-wing-dawn: #fed7aa;
+  --haeru-wing-sky: #a5f3fc;
+  --haeru-blush-rose: #fb7185;
+  --haeru-iris: #0d9488;
+  --haeru-pupil: #134e4a;
+  --haeru-eye-white: #ffffff;
+  --haeru-eye-sparkle: #ffffff;
+  --haeru-mouth: #0d9488;
+  --haeru-glow: #f472b6;
+}
+
+html[data-theme='dark'] {
+  --haeru-pupil: #042f2e;
+}
+
+html[data-theme='dark'] .haeru-glow {
+  opacity: 0.65;
+}
+
+@keyframes haeru-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes haeru-breathe {
+  0%,
+  100% {
+    transform: scaleY(1) scaleX(1);
+  }
+  50% {
+    transform: scaleY(1.025) scaleX(0.985);
+  }
+}
+
+@keyframes haeru-wing-flutter {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0px);
+  }
+  30% {
+    transform: rotate(-6deg) translateY(-4px);
+  }
+  70% {
+    transform: rotate(4deg) translateY(-2px);
+  }
+}
+
+@keyframes haeru-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes haeru-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.42;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes haeru-sparkle {
+  0% {
+    opacity: 0;
+    transform: translateY(0px) scale(0.5);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-12px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-28px) scale(0.3);
+  }
+}
+
+@keyframes haeru-bringing-bounce {
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+  25% {
+    transform: translateY(-14px) scale(1.05);
+  }
+  50% {
+    transform: translateY(0px) scale(0.97);
+  }
+  75% {
+    transform: translateY(-6px) scale(1.02);
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+}
+
+@keyframes haeru-entrance {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.88);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+}
+
+@keyframes haeru-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(110, 231, 183, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(110, 231, 183, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(110, 231, 183, 0);
+  }
+}
+
+@keyframes haeru-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.haeru-float {
+  animation: haeru-float 4s ease-in-out infinite;
+}
+.haeru-breathe {
+  animation: haeru-breathe 3.5s ease-in-out infinite;
+}
+.haeru-blink {
+  animation: haeru-blink 5s ease-in-out infinite;
+  transform-origin: center;
+}
+.haeru-glow {
+  animation: haeru-glow-pulse 3s ease-in-out infinite;
+  transform-origin: center;
+}
+.haeru-entrance {
+  animation: haeru-entrance 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.haeru-bringing {
+  animation: haeru-bringing-bounce 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.haeru-pulse {
+  animation: haeru-pulse-ring 1.8s ease-out infinite;
+}
+
+.haeru-wing-left {
+  animation: haeru-wing-flutter 3s ease-in-out infinite;
+  transform-origin: center right;
+}
+.haeru-wing-right {
+  animation: haeru-wing-flutter 3s ease-in-out infinite reverse;
+  transform-origin: center left;
+}
+
+.haeru-sparkle-1 {
+  animation: haeru-sparkle 2.4s ease-out infinite;
+  animation-delay: 0s;
+}
+.haeru-sparkle-2 {
+  animation: haeru-sparkle 2.4s ease-out infinite;
+  animation-delay: 0.8s;
+}
+.haeru-sparkle-3 {
+  animation: haeru-sparkle 2.4s ease-out infinite;
+  animation-delay: 1.6s;
+}
+
+/* Iridescent rainbow shimmer — soft, toddler-safe hue drift */
+@keyframes haeru-rainbow-shift {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(25deg);
+  }
+  100% {
+    filter: hue-rotate(0deg);
+  }
+}
+
+.haeru-rainbow-body {
+  animation: haeru-rainbow-shift 12s ease-in-out infinite;
+}
+
+/* Floating rainbow sparkle dots */
+.haeru-sparkle-pink {
+  fill: #f472b6;
+  animation: haeru-sparkle 2.2s ease-out infinite;
+}
+.haeru-sparkle-gold {
+  fill: #fbbf24;
+  animation: haeru-sparkle 2.5s ease-out infinite;
+  animation-delay: 0.7s;
+}
+.haeru-sparkle-azure {
+  fill: #38bdf8;
+  animation: haeru-sparkle 2.8s ease-out infinite;
+  animation-delay: 1.4s;
+}
+.haeru-sparkle-violet {
+  fill: #a855f7;
+  animation: haeru-sparkle 2.4s ease-out infinite;
+  animation-delay: 1.9s;
+}
+
+.haeru-orbit {
+  animation: haeru-orbit 14s linear infinite;
+  transform-origin: center;
+}
+.haeru-orbit-delay-1 {
+  animation-delay: -4s;
+}
+.haeru-orbit-delay-2 {
+  animation-delay: -8s;
+}
+
+/* Tactile squish on click */
+.haeru-squish {
+  animation: haeru-jelly-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes haeru-jelly-pop {
+  0% {
+    transform: scale(1, 1);
+  }
+  25% {
+    transform: scale(1.15, 0.85);
+  }
+  50% {
+    transform: scale(0.92, 1.1);
+  }
+  75% {
+    transform: scale(1.05, 0.96);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* Happy wiggle dance (petting mode) */
+.haeru-wiggle {
+  animation: haeru-wiggle-dance 0.7s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes haeru-wiggle-dance {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  20% {
+    transform: rotate(-8deg) scale(1.05);
+  }
+  40% {
+    transform: rotate(8deg) scale(1.05);
+  }
+  60% {
+    transform: rotate(-5deg) scale(1.02);
+  }
+  80% {
+    transform: rotate(5deg) scale(1.02);
+  }
+}
+
+@keyframes haeru-float-particle {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 20px), -60px) scale(1.2);
+  }
+}
+
+.haeru-particle {
+  position: absolute;
+  pointer-events: none;
+  font-size: 14px;
+  animation: haeru-float-particle 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  z-index: 5;
+}
+
+@keyframes haeru-zzz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5);
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(16px, -45px) scale(1.1);
+  }
+}
+
+.haeru-zzz-1 {
+  animation: haeru-zzz 2.5s ease-out infinite;
+  animation-delay: 0s;
+}
+.haeru-zzz-2 {
+  animation: haeru-zzz 2.5s ease-out infinite;
+  animation-delay: 0.8s;
+}
+.haeru-zzz-3 {
+  animation: haeru-zzz 2.5s ease-out infinite;
+  animation-delay: 1.6s;
+}
+
+.haeru-hover-lift {
+  transform: translateY(-4px);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.haeru-interactive-root {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Sign-in showcase floating glass chips — translateY only (no 3D tilt) */
+@keyframes haeru-float-gentle-1 {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes haeru-float-gentle-2 {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.haeru-float-chip-1 {
+  animation: haeru-float-gentle-1 4.5s ease-in-out infinite;
+}
+.haeru-float-chip-2 {
+  animation: haeru-float-gentle-2 5.2s ease-in-out infinite;
+  animation-delay: 1s;
+}
+.haeru-float-chip-3 {
+  animation: haeru-float-gentle-1 4.8s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .haeru-float,
+  .haeru-breathe,
+  .haeru-blink,
+  .haeru-glow,
+  .haeru-wing-left,
+  .haeru-wing-right,
+  .haeru-sparkle-1,
+  .haeru-sparkle-2,
+  .haeru-sparkle-3,
+  .haeru-sparkle-pink,
+  .haeru-sparkle-gold,
+  .haeru-sparkle-azure,
+  .haeru-sparkle-violet,
+  .haeru-rainbow-body,
+  .haeru-bringing,
+  .haeru-pulse,
+  .haeru-orbit,
+  .haeru-squish,
+  .haeru-wiggle,
+  .haeru-particle,
+  .haeru-zzz-1,
+  .haeru-zzz-2,
+  .haeru-zzz-3,
+  .haeru-float-chip-1,
+  .haeru-float-chip-2,
+  .haeru-float-chip-3 {
+    animation: none !important;
+  }
+  .haeru-entrance {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+  .haeru-hover-lift,
+  .haeru-interactive-root {
+    transition: none !important;
+    transform: none !important;
+  }
+}

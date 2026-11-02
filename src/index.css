@@ -1,0 +1,453 @@
+@import "tailwindcss";
+
+/* Class-driven dark: variants (synced with html.dark / data-theme in appStore) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* ── Prismatic Six ─────────────────────────────────────────── */
+  --prism-rose: rgba(251, 113, 133, 1);
+  --prism-amber: rgba(251, 191, 36, 1);
+  --prism-lime: rgba(134, 239, 172, 1);
+  --prism-teal: rgba(45, 212, 191, 1);
+  --prism-azure: rgba(96, 165, 250, 1);
+  --prism-violet: rgba(192, 132, 252, 1);
+
+  /* ── Canvas (Dark: Midnight Himalayan Crystal) ─────────────── */
+  --canvas-bg: linear-gradient(165deg, #090d16 0%, #0f172a 55%, #111827 100%);
+
+  --canvas-glow-1: rgba(251, 113, 133, 0.13);
+  --canvas-glow-2: rgba(251, 191, 36, 0.1);
+  --canvas-glow-3: rgba(96, 165, 250, 0.1);
+  --canvas-glow-4: rgba(192, 132, 252, 0.09);
+  --canvas-glow-5: rgba(45, 212, 191, 0.11);
+  --canvas-glow-6: rgba(134, 239, 172, 0.08);
+
+  /* ── Glass Panels ──────────────────────────────────────────── */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-specular: rgba(255, 255, 255, 0.25);
+  --glass-border-left: rgba(255, 255, 255, 0.16);
+
+  --glass-border-rainbow: linear-gradient(
+    90deg,
+    rgba(251, 113, 133, 0.5) 0%,
+    rgba(251, 191, 36, 0.5) 20%,
+    rgba(134, 239, 172, 0.5) 40%,
+    rgba(45, 212, 191, 0.5) 60%,
+    rgba(96, 165, 250, 0.5) 80%,
+    rgba(192, 132, 252, 0.5) 100%
+  );
+
+  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.18),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.3);
+  --glass-hover-shadow: 0 24px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(251, 113, 133, 0.14),
+    0 0 40px rgba(96, 165, 250, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.28);
+
+  /* ── Inputs & Pills ────────────────────────────────────────── */
+  --pill-bg: rgba(15, 23, 42, 0.65);
+  --pill-border: rgba(255, 255, 255, 0.12);
+  --input-bg: rgba(15, 23, 42, 0.6);
+  --input-border: rgba(255, 255, 255, 0.14);
+  --input-focus-ring: rgba(96, 165, 250, 0.3);
+  --input-focus-border: rgba(96, 165, 250, 0.7);
+
+  /* ── Typography ────────────────────────────────────────────── */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+
+  /* ── Tables ────────────────────────────────────────────────── */
+  --table-border: rgba(255, 255, 255, 0.08);
+  --table-row-hover: rgba(255, 255, 255, 0.04);
+
+  /* ── Sidebar Section Colors ────────────────────────────────── */
+  --nav-children: rgba(251, 113, 133, 1);
+  --nav-finance: rgba(251, 191, 36, 1);
+  --nav-learning: rgba(192, 132, 252, 1);
+  --nav-people: rgba(96, 165, 250, 1);
+  --nav-operations: rgba(45, 212, 191, 1);
+  --nav-superadmin: rgba(251, 191, 36, 1);
+
+  /* ── CTA Gradient ──────────────────────────────────────────── */
+  --gradient-cta-primary: linear-gradient(135deg, #2dd4bf 0%, #60a5fa 50%, #c084fc 100%);
+  --gradient-cta-secondary: linear-gradient(135deg, #fb7185 0%, #fbbf24 100%);
+  --gradient-hero-title: linear-gradient(135deg, #60a5fa 0%, #c084fc 40%, #fb7185 80%, #fbbf24 100%);
+
+  /* ── Domain-specific KPI card tint ─────────────────────────── */
+  --domain-physical: rgba(251, 113, 133, 0.12);
+  --domain-social: rgba(251, 191, 36, 0.12);
+  --domain-language: rgba(134, 239, 172, 0.12);
+  --domain-approaches: rgba(45, 212, 191, 0.12);
+  --domain-cognitive: rgba(96, 165, 250, 0.12);
+  --domain-spiritual: rgba(192, 132, 252, 0.12);
+}
+
+:root[data-theme='light'],
+html.light {
+  /* ── Canvas (Sunrise Himalayan Frosted Prism) ──────────────── */
+  --canvas-bg: linear-gradient(165deg, #fbf8f3 0%, #f4eee3 55%, #eae1d2 100%);
+
+  --canvas-glow-1: rgba(251, 113, 133, 0.1);
+  --canvas-glow-2: rgba(251, 191, 36, 0.12);
+  --canvas-glow-3: rgba(96, 165, 250, 0.09);
+  --canvas-glow-4: rgba(192, 132, 252, 0.07);
+  --canvas-glow-5: rgba(45, 212, 191, 0.09);
+  --canvas-glow-6: rgba(134, 239, 172, 0.06);
+
+  /* ── Glass Panels ──────────────────────────────────────────── */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-hover: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(226, 214, 198, 0.8);
+  --glass-border-specular: rgba(255, 255, 255, 0.95);
+  --glass-border-left: rgba(255, 255, 255, 0.85);
+
+  --glass-shadow: 0 10px 30px -10px rgba(51, 65, 92, 0.08), 0 1px 3px rgba(51, 65, 92, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --glass-hover-shadow: 0 20px 40px -12px rgba(51, 65, 92, 0.14), 0 0 20px rgba(251, 113, 133, 0.1),
+    0 0 40px rgba(96, 165, 250, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1);
+
+  /* ── Inputs & Pills ────────────────────────────────────────── */
+  --pill-bg: rgba(255, 255, 255, 0.85);
+  --pill-border: rgba(226, 214, 198, 0.8);
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --input-border: rgba(226, 214, 198, 0.9);
+  --input-focus-ring: rgba(96, 165, 250, 0.2);
+  --input-focus-border: rgba(96, 165, 250, 0.55);
+
+  /* ── Typography ────────────────────────────────────────────── */
+  --text-main: #1e293b;
+  --text-muted: #475569;
+  --text-faint: #94a3b8;
+
+  /* ── Tables ────────────────────────────────────────────────── */
+  --table-border: rgba(226, 214, 198, 0.7);
+  --table-row-hover: rgba(248, 240, 229, 0.65);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Quicksand, system-ui, sans-serif;
+  font-weight: 600;
+  color: var(--text-main);
+  background: var(--canvas-bg);
+  -webkit-font-smoothing: antialiased;
+  transition: color 0.3s ease, background 0.3s ease;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: Fredoka, Quicksand, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Ambient Himalayan canvas — 6 prismatic spheres */
+.wsh-canvas {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 70% 50% at 8% 15%, var(--canvas-glow-1), transparent 55%),
+    radial-gradient(ellipse 55% 40% at 92% 8%, var(--canvas-glow-2), transparent 50%),
+    radial-gradient(ellipse 45% 35% at 88% 55%, var(--canvas-glow-3), transparent 50%),
+    radial-gradient(ellipse 50% 45% at 72% 95%, var(--canvas-glow-4), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 12% 88%, var(--canvas-glow-5), transparent 55%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, var(--canvas-glow-6), transparent 60%),
+    var(--canvas-bg);
+  transition: background 0.3s ease;
+}
+
+/* Soft 3D Glass Surface — Rock-solid, zero jarring tilt or distortion */
+.glass-panel-3d {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-border-specular);
+  border-left: 1px solid var(--glass-border-left);
+  box-shadow: var(--glass-shadow);
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.25s ease,
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.glass-panel-3d:hover {
+  box-shadow: var(--glass-hover-shadow);
+}
+
+/* Rainbow Rim Glass — hero cards, KPI cards, landing sections */
+.glass-panel-rainbow {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.25s ease;
+}
+
+.glass-panel-rainbow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--glass-border-rainbow);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.glass-panel-rainbow:hover {
+  box-shadow: var(--glass-hover-shadow);
+  transform: translateY(-2px);
+}
+
+/* Status badges — prismatic */
+.badge-present {
+  background: rgba(134, 239, 172, 0.15);
+  border: 1px solid rgba(134, 239, 172, 0.45);
+  color: #16a34a;
+  box-shadow: 0 0 10px rgba(134, 239, 172, 0.15);
+}
+.badge-absent {
+  background: rgba(251, 113, 133, 0.15);
+  border: 1px solid rgba(251, 113, 133, 0.45);
+  color: #be123c;
+}
+.badge-late {
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: #b45309;
+}
+.badge-pending {
+  background: rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  color: #1d4ed8;
+}
+.badge-paid {
+  background: rgba(45, 212, 191, 0.15);
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  color: #0d9488;
+}
+.badge-overdue {
+  background: rgba(192, 132, 252, 0.15);
+  border: 1px solid rgba(192, 132, 252, 0.45);
+  color: #7c3aed;
+}
+
+html.dark .badge-present,
+.dark .badge-present {
+  color: #86efac;
+}
+html.dark .badge-absent,
+.dark .badge-absent {
+  color: #fb7185;
+}
+html.dark .badge-late,
+.dark .badge-late {
+  color: #fbbf24;
+}
+html.dark .badge-pending,
+.dark .badge-pending {
+  color: #60a5fa;
+}
+html.dark .badge-paid,
+.dark .badge-paid {
+  color: #2dd4bf;
+}
+html.dark .badge-overdue,
+.dark .badge-overdue {
+  color: #c084fc;
+}
+
+/* Soft Glass Pill */
+.obsidian-pill {
+  background: var(--pill-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--pill-border);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+/* Glass Inputs — azure focus */
+.glass-input {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--text-main);
+  font: inherit;
+  width: 100%;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px var(--input-focus-ring);
+}
+
+.glass-input::placeholder {
+  color: var(--text-faint);
+}
+
+/* Stable glass tables */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  color: var(--text-faint);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--table-border);
+  background: transparent;
+}
+
+td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--table-border);
+  vertical-align: middle;
+  color: var(--text-main);
+  transition: background-color 0.15s ease;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover td {
+  background: var(--table-row-hover);
+}
+
+@keyframes haeru-voice-wave {
+  0%,
+  100% {
+    transform: scaleY(0.45);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.haeru-voice-wave {
+  animation: haeru-voice-wave 0.55s ease-in-out infinite;
+}
+
+.haeru-voice-wave:nth-child(1) {
+  background: var(--prism-rose);
+}
+.haeru-voice-wave:nth-child(2) {
+  background: var(--prism-amber);
+}
+.haeru-voice-wave:nth-child(3) {
+  background: var(--prism-teal);
+}
+.haeru-voice-wave:nth-child(4) {
+  background: var(--prism-azure);
+}
+.haeru-voice-wave:nth-child(5) {
+  background: var(--prism-violet);
+}
+.haeru-voice-wave:nth-child(6n) {
+  background: var(--prism-lime);
+}
+.haeru-voice-wave:nth-child(6n + 1) {
+  background: var(--prism-rose);
+}
+.haeru-voice-wave:nth-child(6n + 2) {
+  background: var(--prism-amber);
+}
+.haeru-voice-wave:nth-child(6n + 3) {
+  background: var(--prism-teal);
+}
+.haeru-voice-wave:nth-child(6n + 4) {
+  background: var(--prism-azure);
+}
+.haeru-voice-wave:nth-child(6n + 5) {
+  background: var(--prism-violet);
+}
+
+@keyframes prism-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-shimmer {
+  background-size: 200% 200%;
+  animation: prism-shimmer 4s ease infinite;
+}
+
+@keyframes prism-pulse {
+  0%,
+  100% {
+    opacity: 0.8;
+    filter: blur(32px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(24px);
+  }
+}
+
+@keyframes landingFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-fade {
+  animation: landingFadeUp 0.7s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .haeru-voice-wave,
+  .gradient-shimmer,
+  .landing-fade {
+    animation: none !important;
+  }
+}
