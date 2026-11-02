@@ -174,6 +174,7 @@ export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfi
         items: [
           { id: 'children', label: 'Children', icon: 'smile' },
           { id: 'applications', label: 'Applications', icon: 'file' },
+          { id: 'pairing', label: 'Telegram pairing', icon: 'message' },
         ],
       },
       {

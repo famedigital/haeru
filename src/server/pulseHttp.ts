@@ -18,6 +18,7 @@ import {
   completeAdmission,
   createEldsObservation,
   createStaff,
+  createTelegramPairing,
   getAuthMe,
   getCentre,
   getChild,
@@ -25,6 +26,7 @@ import {
   listChildrenDb,
   listEldsObservations,
   listStaff,
+  listTelegramPairingPeople,
   loginUser,
   logoutAuth,
   patchCentre,
@@ -295,6 +297,28 @@ export async function handlePulseHttp(
       const raw = await readBody(req)
       const json = raw ? JSON.parse(raw) : {}
       const result = await createStaff(json)
+      send(res, result.status, result)
+      return true
+    }
+
+    if (req.method === 'GET' && url === '/api/telegram/pairing') {
+      if (!authorize(req)) {
+        send(res, 401, { ok: false, error: 'Unauthorized' })
+        return true
+      }
+      const result = await listTelegramPairingPeople()
+      send(res, result.status, result)
+      return true
+    }
+
+    if (req.method === 'POST' && url === '/api/telegram/pairing') {
+      if (!authorize(req)) {
+        send(res, 401, { ok: false, error: 'Unauthorized' })
+        return true
+      }
+      const raw = await readBody(req)
+      const json = raw ? JSON.parse(raw) : {}
+      const result = await createTelegramPairing(json)
       send(res, result.status, result)
       return true
     }

@@ -18,7 +18,17 @@ type GuardianRow = {
   isPrimary: boolean
   canViewFinance: boolean
   canPickup: boolean
-  user: { id: string; name: string; phone: string; email?: string | null; role: string }
+  user: {
+    id: string
+    name: string
+    phone: string
+    email?: string | null
+    role: string
+    telegramPaired?: boolean
+    pairingStatus?: 'paired' | 'pending' | 'unlinked'
+    pairingToken?: string | null
+    deepLink?: string | null
+  }
 }
 
 type PickupRow = {
@@ -61,6 +71,95 @@ type ProgressPayload = {
   domainStats: DomainStat[]
   radarSeries: RadarSeries[]
   recentMilestones: ProgressMilestone[]
+}
+
+function GuardianCard({
+  guardian: g,
+  canManage,
+  onChanged,
+  showToast,
+}: {
+  guardian: GuardianRow
+  canManage: boolean
+  onChanged: () => void
+  showToast: (msg: string) => void
+}) {
+  const [busy, setBusy] = useState(false)
+  const status = g.user.pairingStatus || (g.user.telegramPaired ? 'paired' : 'unlinked')
+
+  const generate = async () => {
+    setBusy(true)
+    const r = await apiFetch<{ deepLink: string; pairingToken: string; name: string }>(
+      '/telegram/pairing',
+      { method: 'POST', body: JSON.stringify({ userId: g.user.id, reset: true }) },
+    )
+    setBusy(false)
+    if (!r.ok || !r.data) {
+      showToast('Could not create pairing link')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(r.data.deepLink)
+      showToast(`Telegram link for ${r.data.name} copied`)
+    } catch {
+      showToast(`Code: ${r.data.pairingToken}`)
+    }
+    onChanged()
+  }
+
+  return (
+    <GlassCard padding="lg" className="space-y-3">
+      <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs font-bold">
+        {g.user.name
+          .split(' ')
+          .map((w) => w[0])
+          .join('')
+          .slice(0, 2)}
+      </div>
+      <div>
+        <b className="text-slate-900 dark:text-white block">{g.user.name}</b>
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          {g.relation}
+          {g.isPrimary ? ' · primary' : ''}
+        </span>
+      </div>
+      <div className="text-xs text-slate-500 dark:text-slate-400">
+        {g.user.email || '—'}
+        <br />
+        +975 {g.user.phone}
+      </div>
+      <GlassBadge tone={g.canViewFinance ? 'ap' : 'violet'}>
+        {g.canViewFinance ? 'Can pay & view all' : 'Pickup · limited'}
+        {!g.canPickup ? ' · no pickup' : ''}
+      </GlassBadge>
+      {canManage ? (
+        <div className="space-y-2 pt-1 border-t border-slate-200/80 dark:border-white/5">
+          <GlassBadge
+            tone={status === 'paired' ? 'ap' : status === 'pending' ? 'bl' : 'nya'}
+          >
+            Telegram · {status === 'paired' ? 'paired' : status === 'pending' ? 'code waiting' : 'not linked'}
+          </GlassBadge>
+          {g.user.deepLink ? (
+            <button
+              type="button"
+              className="block w-full text-left text-[11px] text-teal-700 dark:text-teal-300 break-all"
+              onClick={() => {
+                void navigator.clipboard.writeText(g.user.deepLink!).then(
+                  () => showToast('Telegram link copied'),
+                  () => showToast(g.user.pairingToken || 'Link ready'),
+                )
+              }}
+            >
+              {g.user.deepLink}
+            </button>
+          ) : null}
+          <GlassButton variant="soft" className="w-full" disabled={busy} onClick={() => void generate()}>
+            {busy ? 'Generating…' : status === 'paired' ? 'Reset Telegram link' : 'Generate Telegram link'}
+          </GlassButton>
+        </div>
+      ) : null}
+    </GlassCard>
+  )
 }
 
 export function ChildProfile360() {
@@ -299,40 +398,42 @@ export function ChildProfile360() {
       )}
 
       {tabs[tab] === 'Family' && (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {guardians.length === 0 ? (
-            <GlassCard padding="lg">
-              <p className="text-sm text-slate-600 dark:text-slate-300">No guardians linked yet.</p>
+        <div className="space-y-4">
+          {role === 'owner' ? (
+            <GlassCard padding="md" className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <p className="text-sm text-slate-600 dark:text-slate-300 flex-1">
+                Generate a one-time Telegram link so this family receives private Haeru Voice AI
+                updates after you confirm them.
+              </p>
+              <GlassButton variant="soft" onClick={() => setScreen('pairing')}>
+                Open Telegram pairing →
+              </GlassButton>
             </GlassCard>
-          ) : (
-            guardians.map((g) => (
-              <GlassCard key={g.id} padding="lg" className="space-y-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs font-bold">
-                  {g.user.name
-                    .split(' ')
-                    .map((w) => w[0])
-                    .join('')
-                    .slice(0, 2)}
-                </div>
-                <div>
-                  <b className="text-slate-900 dark:text-white block">{g.user.name}</b>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {g.relation}
-                    {g.isPrimary ? ' · primary' : ''}
-                  </span>
-                </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  {g.user.email || '—'}
-                  <br />
-                  +975 {g.user.phone}
-                </div>
-                <GlassBadge tone={g.canViewFinance ? 'ap' : 'violet'}>
-                  {g.canViewFinance ? 'Can pay & view all' : 'Pickup · limited'}
-                  {!g.canPickup ? ' · no pickup' : ''}
-                </GlassBadge>
+          ) : null}
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {guardians.length === 0 ? (
+              <GlassCard padding="lg">
+                <p className="text-sm text-slate-600 dark:text-slate-300">No guardians linked yet.</p>
               </GlassCard>
-            ))
-          )}
+            ) : (
+              guardians.map((g) => (
+                <GuardianCard
+                  key={g.id}
+                  guardian={g}
+                  canManage={role === 'owner'}
+                  onChanged={() => {
+                    // reload profile
+                    void apiFetch<LiveChild>(`/children/${encodeURIComponent(selectedChildId)}`).then(
+                      (r) => {
+                        if (r.ok && r.data) setChild(r.data)
+                      },
+                    )
+                  }}
+                  showToast={showToast}
+                />
+              ))
+            )}
+          </div>
         </div>
       )}
 

@@ -11,6 +11,7 @@ import { TodayDashboard } from '../components/owner/TodayDashboard'
 import { CentresGallery } from '../components/owner/CentresGallery'
 import { CentreBankSettings } from '../components/owner/CentreBankSettings'
 import { ChildrenDirectory } from '../components/owner/ChildrenDirectory'
+import { TelegramPairing } from '../components/owner/TelegramPairing'
 import { AdmissionsWizard } from '../components/owner/AdmissionsWizard'
 import { StaffLeave } from '../components/owner/StaffLeave'
 import { BillingHub } from '../components/owner/BillingHub'
@@ -53,6 +54,8 @@ function ScreenRouter() {
       return <TodayDashboard />
     case 'children':
       return <ChildrenDirectory />
+    case 'pairing':
+      return <TelegramPairing />
     case 'child':
       return <ChildProfile360 />
     case 'applications':

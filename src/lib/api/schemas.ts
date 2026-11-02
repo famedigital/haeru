@@ -73,6 +73,15 @@ export const AutoInvoiceRunSchema = z.object({
   leadDays: z.number().int().min(1).max(30).default(14),
 })
 
+/** POST /api/telegram/pairing — Director generates / resets a one-time Telegram deep link */
+export const TelegramPairingCreateSchema = z
+  .object({
+    userId: z.string().min(1),
+    /** When true, disconnect existing Telegram chat and issue a fresh code */
+    reset: z.boolean().default(true),
+  })
+  .strict()
+
 /** POST /api/payments/report */
 export const PaymentReportSchema = z.object({
   invoiceId: z.string().min(1),

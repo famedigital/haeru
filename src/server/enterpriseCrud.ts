@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import {
   AdmissionCompleteSchema,
   AuthLoginSchema,
@@ -5,6 +6,7 @@ import {
   CentrePatchSchema,
   EldsObservationCreateSchema,
   StaffCreateSchema,
+  TelegramPairingCreateSchema,
 } from '../lib/api/schemas'
 import { centreReceiveEmv, parseCentreBank } from '../lib/payments/centreBank'
 import { adoptBankQr } from '../lib/payments/centreBank'
@@ -13,6 +15,35 @@ import { prisma } from './prisma'
 function uidCode(prefix: string) {
   const n = Math.floor(100 + Math.random() * 900)
   return `${prefix}-${n}`
+}
+
+function telegramBotUsername() {
+  return (process.env.TELEGRAM_BOT_USERNAME || 'HaeruEccdBot').replace(/^@/, '')
+}
+
+function pairingDeepLink(token: string) {
+  return `https://t.me/${telegramBotUsername()}?start=${encodeURIComponent(token)}`
+}
+
+function makePairingToken(centreCode: string, name: string) {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_|_$/g, '')
+    .slice(0, 18)
+  const rand = randomBytes(3).toString('hex')
+  const code = (centreCode || 'wsh').toLowerCase().replace(/[^a-z0-9]/g, '')
+  // Telegram start payload max 64 chars
+  return `pair_${code}_${slug || 'user'}_${rand}`.slice(0, 64)
+}
+
+function pairingStatus(user: {
+  telegramChatId: string | null
+  pairingToken: string | null
+}) {
+  if (user.telegramChatId) return 'paired' as const
+  if (user.pairingToken) return 'pending' as const
+  return 'unlinked' as const
 }
 
 export async function getCentre() {
@@ -444,6 +475,8 @@ export async function getChild(id: string) {
               phone: true,
               email: true,
               role: true,
+              telegramChatId: true,
+              pairingToken: true,
             },
           },
         },
@@ -461,6 +494,16 @@ export async function getChild(id: string) {
       age: ageLabel(child.dob),
       feedConsent: child.photoConsentFeed,
       socialConsent: child.photoConsentSocial,
+      guardians: child.guardians.map((g) => ({
+        ...g,
+        user: {
+          ...g.user,
+          telegramPaired: Boolean(g.user.telegramChatId),
+          pairingStatus: pairingStatus(g.user),
+          pairingToken: g.user.pairingToken,
+          deepLink: g.user.pairingToken ? pairingDeepLink(g.user.pairingToken) : null,
+        },
+      })),
       emergency: {
         allergies: child.allergies,
         medication: child.medication,
@@ -469,6 +512,115 @@ export async function getChild(id: string) {
         toiletStatus: child.toiletStatus,
         motherTongue: child.motherTongue,
       },
+    },
+  }
+}
+
+export async function listTelegramPairingPeople(centreId?: string) {
+  const centre = await getCentre()
+  const cid = centreId || centre.data.id
+  const users = await prisma.user.findMany({
+    where: {
+      centreId: cid,
+      role: { in: ['owner', 'facilitator', 'parent', 'caregiver'] },
+    },
+    orderBy: [{ role: 'asc' }, { name: 'asc' }],
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      email: true,
+      phone: true,
+      room: true,
+      telegramChatId: true,
+      pairingToken: true,
+      guardianLinks: {
+        select: {
+          relation: true,
+          isPrimary: true,
+          child: { select: { id: true, name: true, code: true, room: true } },
+        },
+      },
+    },
+  })
+
+  const bot = telegramBotUsername()
+  const data = users.map((u) => {
+    const status = pairingStatus(u)
+    return {
+      id: u.id,
+      name: u.name,
+      role: u.role,
+      email: u.email,
+      phone: u.phone,
+      room: u.room,
+      telegramPaired: Boolean(u.telegramChatId),
+      pairingStatus: status,
+      pairingToken: u.pairingToken,
+      deepLink: u.pairingToken ? pairingDeepLink(u.pairingToken) : null,
+      botUsername: bot,
+      children: u.guardianLinks.map((l) => ({
+        id: l.child.id,
+        name: l.child.name,
+        code: l.child.code,
+        room: l.child.room,
+        relation: l.relation,
+        isPrimary: l.isPrimary,
+      })),
+    }
+  })
+
+  return { ok: true as const, status: 200, data: { botUsername: bot, people: data } }
+}
+
+export async function createTelegramPairing(body: unknown) {
+  const parsed = TelegramPairingCreateSchema.safeParse(body)
+  if (!parsed.success) {
+    return { ok: false as const, status: 400, error: parsed.error.flatten() }
+  }
+  const { userId, reset } = parsed.data
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) return { ok: false as const, status: 404, error: 'User not found' }
+
+  const centre = await prisma.centre.findUnique({ where: { id: user.centreId } })
+  const centreCode = centre?.code || user.centreId || 'WSH'
+
+  let token = makePairingToken(centreCode, user.name)
+  // Extremely unlikely collision — retry once
+  const clash = await prisma.user.findFirst({ where: { pairingToken: token } })
+  if (clash) token = makePairingToken(centreCode, user.name)
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      pairingToken: token,
+      ...(reset
+        ? { telegramChatId: null, telegramUserId: null }
+        : {}),
+    },
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      pairingToken: true,
+      telegramChatId: true,
+    },
+  })
+
+  return {
+    ok: true as const,
+    status: 200,
+    data: {
+      userId: updated.id,
+      name: updated.name,
+      role: updated.role,
+      pairingToken: updated.pairingToken!,
+      deepLink: pairingDeepLink(updated.pairingToken!),
+      botUsername: telegramBotUsername(),
+      pairingStatus: pairingStatus(updated),
+      telegramPaired: Boolean(updated.telegramChatId),
+      instructions:
+        `Open the link on the parent's phone, or ask them to message @${telegramBotUsername()} and send: ${updated.pairingToken}`,
     },
   }
 }
