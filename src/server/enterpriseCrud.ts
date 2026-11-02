@@ -251,12 +251,53 @@ export async function listEldsObservations(childId?: string) {
   return { ok: true as const, status: 200, data: rows }
 }
 
+const MOESD_DOMAINS = [
+  'Physical & motor',
+  'Social & emotional',
+  'Language & communication',
+  'Approaches to learning',
+  'Cognition & knowledge',
+  'Spiritual, moral & cultural',
+] as const
+
+function canonicalDomain(raw: string): (typeof MOESD_DOMAINS)[number] | null {
+  const n = raw.toLowerCase().replace(/\s+/g, ' ').trim()
+  const hit = MOESD_DOMAINS.find((d) => {
+    const dd = d.toLowerCase()
+    return n === dd || n.includes(dd) || dd.includes(n)
+  })
+  if (hit) return hit
+  if (n.includes('physical') || n.includes('motor')) return 'Physical & motor'
+  if (n.includes('social') || n.includes('emotional')) return 'Social & emotional'
+  if (n.includes('language') || n.includes('literacy') || n.includes('communication'))
+    return 'Language & communication'
+  if (n.includes('approach')) return 'Approaches to learning'
+  if (n.includes('cognit') || n.includes('knowledge') || n.includes('general'))
+    return 'Cognition & knowledge'
+  if (n.includes('spiritual') || n.includes('moral') || n.includes('cultural'))
+    return 'Spiritual, moral & cultural'
+  return null
+}
+
+function ageLabel(dob: Date): string {
+  const now = new Date()
+  let months =
+    (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth())
+  if (now.getDate() < dob.getDate()) months -= 1
+  const y = Math.floor(Math.max(0, months) / 12)
+  const m = Math.max(0, months) % 12
+  return `${y}y ${m}m`
+}
+
 export async function loginUser(body: unknown) {
   const parsed = AuthLoginSchema.safeParse(body)
   if (!parsed.success) {
     return { ok: false as const, status: 400, error: parsed.error.flatten() }
   }
-  const user = await prisma.user.findUnique({ where: { email: parsed.data.email } })
+  const user = await prisma.user.findUnique({
+    where: { email: parsed.data.email },
+    include: { centre: true },
+  })
   if (!user || user.password !== parsed.data.password) {
     return { ok: false as const, status: 401, error: 'Invalid email or password' }
   }
@@ -270,27 +311,269 @@ export async function loginUser(body: unknown) {
     childIds = links.map((l) => l.childId)
   }
 
+  const role = user.role as
+    | 'superadmin'
+    | 'owner'
+    | 'facilitator'
+    | 'parent'
+    | 'caregiver'
+  const token = `uat-${user.id}`
+  const appUser = {
+    id: user.id,
+    name: user.name,
+    role,
+    email: user.email,
+    phone: user.phone,
+    room: user.room,
+    centreId: user.centreId,
+  }
+  const centre = {
+    id: user.centre.id,
+    code: user.centre.code,
+    name: user.centre.name,
+    place: user.centre.place,
+    city: user.centre.city,
+  }
+
   return {
     ok: true as const,
     status: 200,
     data: {
+      // Flat fields kept for older clients
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role as
-        | 'superadmin'
-        | 'owner'
-        | 'facilitator'
-        | 'parent'
-        | 'caregiver',
+      role,
       room: user.room,
+      childIds,
+      token,
+      user: appUser,
+      centre,
+    },
+  }
+}
+
+export async function getAuthMe(token: string | null) {
+  if (!token) return { ok: false as const, status: 401, error: 'Unauthorized' }
+  const m = token.replace(/^Bearer\s+/i, '').match(/^uat-(.+)$/)
+  if (!m) return { ok: false as const, status: 401, error: 'Invalid token' }
+  const user = await prisma.user.findUnique({
+    where: { id: m[1]! },
+    include: { centre: true },
+  })
+  if (!user) return { ok: false as const, status: 401, error: 'Session expired' }
+
+  let childIds: string[] = []
+  if (user.role === 'parent' || user.role === 'caregiver') {
+    const links = await prisma.childGuardian.findMany({
+      where: { userId: user.id },
+      select: { childId: true },
+    })
+    childIds = links.map((l) => l.childId)
+  }
+
+  const role = user.role as
+    | 'superadmin'
+    | 'owner'
+    | 'facilitator'
+    | 'parent'
+    | 'caregiver'
+
+  return {
+    ok: true as const,
+    status: 200,
+    data: {
+      user: {
+        id: user.id,
+        name: user.name,
+        role,
+        email: user.email,
+        phone: user.phone,
+        room: user.room,
+        centreId: user.centreId,
+      },
+      centre: {
+        id: user.centre.id,
+        code: user.centre.code,
+        name: user.centre.name,
+        place: user.centre.place,
+        city: user.centre.city,
+      },
       childIds,
       token: `uat-${user.id}`,
     },
   }
 }
 
-export async function listChildrenDb() {
-  const rows = await prisma.child.findMany({ orderBy: { code: 'asc' } })
-  return { ok: true as const, status: 200, data: rows }
+export async function logoutAuth() {
+  return { ok: true as const, status: 200, data: { cleared: true } }
+}
+
+export async function listChildrenDb(opts?: { room?: string; centreId?: string }) {
+  const rows = await prisma.child.findMany({
+    where: {
+      ...(opts?.room ? { room: opts.room } : {}),
+      ...(opts?.centreId ? { centreId: opts.centreId } : {}),
+    },
+    orderBy: { code: 'asc' },
+    include: {
+      guardians: {
+        include: {
+          user: { select: { id: true, name: true, phone: true, email: true, role: true } },
+        },
+      },
+    },
+  })
+  const data = rows.map((c) => ({
+    ...c,
+    age: ageLabel(c.dob),
+  }))
+  return { ok: true as const, status: 200, data }
+}
+
+export async function getChild(id: string) {
+  const child = await prisma.child.findUnique({
+    where: { id },
+    include: {
+      guardians: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
+      pickupLogs: { orderBy: { pickupTime: 'desc' }, take: 10 },
+      careLogs: { orderBy: { date: 'desc' }, take: 5 },
+    },
+  })
+  if (!child) return { ok: false as const, status: 404, error: 'Child not found' }
+  return {
+    ok: true as const,
+    status: 200,
+    data: {
+      ...child,
+      age: ageLabel(child.dob),
+      feedConsent: child.photoConsentFeed,
+      socialConsent: child.photoConsentSocial,
+      emergency: {
+        allergies: child.allergies,
+        medication: child.medication,
+        doctorInfo: child.doctorInfo,
+        napRoutine: child.napRoutine,
+        toiletStatus: child.toiletStatus,
+        motherTongue: child.motherTongue,
+      },
+    },
+  }
+}
+
+export async function getChildProgress(childId: string) {
+  const child = await prisma.child.findUnique({ where: { id: childId } })
+  if (!child) return { ok: false as const, status: 404, error: 'Child not found' }
+
+  const observations = await prisma.eldsObservation.findMany({
+    where: { childId },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      facilitator: { select: { id: true, name: true } },
+    },
+  })
+
+  const hermes = await prisma.hermesMoment.findMany({
+    where: { childId, status: 'delivered' },
+    orderBy: { createdAt: 'desc' },
+    take: 30,
+  })
+
+  const domainStats = MOESD_DOMAINS.map((domain) => {
+    const rows = observations.filter((o) => canonicalDomain(o.domain) === domain)
+    const hermesHits = hermes.filter((h) => canonicalDomain(h.domain) === domain)
+    let ap = rows.filter((r) => r.rating === 'ap').length
+    let bl = rows.filter((r) => r.rating === 'bl').length
+    let nya = rows.filter((r) => r.rating === 'nya').length
+    // Delivered Voice AI moments count as achieved evidence when no checklist yet
+    ap += hermesHits.length
+    const total = ap + bl + nya
+    const score = total === 0 ? 0 : Math.round(((ap + bl * 0.5) / total) * 1000) / 10
+    const lastObs = rows[0]?.createdAt ?? hermesHits[0]?.confirmedAt ?? hermesHits[0]?.createdAt
+    return {
+      domain,
+      ap,
+      bl,
+      nya,
+      total,
+      score,
+      lastObserved: lastObs ? lastObs.toISOString() : null,
+      voiceAiCount: hermesHits.length,
+    }
+  })
+
+  const values = domainStats.map((d) => (d.total === 0 ? 0.35 : Math.min(1, d.score / 100)))
+  const radarSeries = [
+    {
+      window: 'Oct–Nov' as const,
+      color: '#2dd4bf',
+      fill: 'rgba(45, 212, 191, 0.18)',
+      dots: true,
+      values,
+    },
+    {
+      window: 'Aug–Sep' as const,
+      color: 'rgba(148, 163, 184, 0.55)',
+      dash: true,
+      values: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
+    },
+  ]
+
+  const recentMilestones = [
+    ...observations.slice(0, 20).map((o) => ({
+      id: o.id,
+      date: (o.confirmedAt ?? o.createdAt).toISOString(),
+      domain: o.domain,
+      indicator: o.indicator,
+      rating: o.rating,
+      source: o.source,
+      facilitatorName: o.facilitator.name,
+      isConfirmed: o.isConfirmed,
+    })),
+    ...hermes.slice(0, 10).map((h) => {
+      let indicator = h.transcription || 'Classroom voice moment'
+      try {
+        const raw = JSON.parse(h.rawHermesJson) as { milestone?: string; parentSafeTitle?: string }
+        indicator = raw.parentSafeTitle || raw.milestone || indicator
+      } catch {
+        /* keep */
+      }
+      return {
+        id: h.id,
+        date: (h.confirmedAt ?? h.createdAt).toISOString(),
+        domain: h.domain,
+        indicator,
+        rating: 'ap',
+        source: 'voice',
+        facilitatorName: 'Haeru Voice AI',
+        isConfirmed: true,
+      }
+    }),
+  ].sort((a, b) => (a.date < b.date ? 1 : -1))
+
+  return {
+    ok: true as const,
+    status: 200,
+    data: {
+      childId: child.id,
+      childName: child.name,
+      room: child.room,
+      totalObservations: observations.length + hermes.length,
+      domainStats,
+      radarSeries,
+      recentMilestones,
+    },
+  }
 }

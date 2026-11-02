@@ -173,7 +173,7 @@ function SignInShowcaseAside() {
  */
 export function RoleLogin() {
   const id = useId()
-  const { setRole, setScreen, showToast, openChild } = useAppStore()
+  const { login: applySession, showToast, setRole } = useAppStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -186,37 +186,54 @@ export function RoleLogin() {
         role: AuthRole
         name: string
         childIds: string[]
+        token: string
+        user?: {
+          id: string
+          name: string
+          role: AuthRole
+          email?: string | null
+          phone: string
+          room?: string | null
+          centreId: string
+        }
+        centre?: {
+          id: string
+          code: string
+          name: string
+          place: string
+          city: string
+        }
+        id?: string
+        email?: string | null
+        room?: string | null
       }>('/auth/login', {
         method: 'POST',
         auth: false,
         body: JSON.stringify({ email: e, password: p }),
       })
-      if (!r.ok || !r.data) {
+      if (!r.ok || !r.data?.token) {
         showToast('Login failed · check email and password')
         return
       }
-      try {
-        localStorage.setItem('wsh_uat_session', JSON.stringify(r.data))
-      } catch {
-        /* ignore */
+      const d = r.data
+      const user = d.user ?? {
+        id: d.id || 'unknown',
+        name: d.name,
+        role: d.role,
+        email: d.email,
+        phone: '',
+        room: d.room,
+        centreId: d.centre?.id || 'WSH',
       }
-      const nextRole = r.data.role
-      const home =
-        nextRole === 'superadmin'
-          ? 'super_overview'
-          : nextRole === 'owner'
-            ? 'centres'
-            : nextRole === 'facilitator'
-              ? 'ftoday'
-              : nextRole === 'caregiver'
-                ? 'chome'
-                : 'phome'
-      setRole(nextRole)
-      if (r.data.childIds[0]) {
-        openChild(r.data.childIds[0])
+      const centre = d.centre ?? {
+        id: 'WSH',
+        code: 'WSH',
+        name: "Wangchuk's School of Heroes",
+        place: 'Rigpai Ling, Babesa, Thimphu',
+        city: 'Thimphu',
       }
-      setScreen(home)
-      showToast(`Welcome, ${r.data.name}`)
+      applySession(user, centre, d.token, d.childIds || [])
+      showToast(`Welcome, ${user.name}`)
     } catch {
       showToast('Network error · try again or check API')
     } finally {

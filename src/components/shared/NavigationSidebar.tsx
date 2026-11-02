@@ -9,6 +9,7 @@ import {
   Home,
   Image,
   Lock,
+  LogOut,
   Mic,
   PlusCircle,
   Receipt,
@@ -16,6 +17,7 @@ import {
   ShieldAlert,
   Smile,
   Sparkles,
+  UserRound,
   Users,
   Wallet,
   Repeat,
@@ -100,9 +102,26 @@ function sectionFromLabel(label: string, role: Role): SectionKey {
 }
 
 export function NavigationSidebar() {
-  const { role, screen, setScreen } = useAppStore()
+  const {
+    role,
+    screen,
+    setScreen,
+    currentUser,
+    currentCentre,
+    logout,
+    showToast,
+  } = useAppStore()
   if (role === 'signin' || role === 'landing') return null
   const cfg = ROLE_CONFIGS[role as Exclude<Role, 'signin' | 'landing'>]
+  const displayName = currentUser?.name || cfg.userName
+  const displayRole = currentUser?.role || cfg.label
+  const roomLabel = currentUser?.room || 'All rooms'
+  const initials = displayName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 
   return (
     <aside className="hidden md:flex w-64 shrink-0 flex-col gap-4 p-4 border-r border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl sticky top-0 h-screen overflow-y-auto">
@@ -115,9 +134,11 @@ export function NavigationSidebar() {
         </div>
         <div className="pl-[42px]">
           <b className="block text-xs text-slate-900 dark:text-white leading-tight">
-            Wangchuk&apos;s School of Heroes
+            {currentCentre?.name || 'Haeru ECCD'}
           </b>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">Babesa, Thimphu</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+            {currentCentre?.place || currentCentre?.city || 'Bhutan'}
+          </span>
         </div>
       </div>
 
@@ -169,19 +190,42 @@ export function NavigationSidebar() {
         })}
       </nav>
 
-      <div className="obsidian-pill rounded-2xl p-3 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400/30 via-blue-400/25 to-violet-400/30 text-teal-800 dark:text-teal-200 flex items-center justify-center text-xs font-bold">
-          {cfg.userName
-            .split(' ')
-            .map((w) => w[0])
-            .join('')
-            .slice(0, 2)}
-        </div>
-        <div className="min-w-0">
-          <div className="text-sm text-[color:var(--text-main)] font-bold truncate">
-            {cfg.userName}
+      <div className="space-y-2">
+        <div className="obsidian-pill rounded-2xl p-3 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400/30 via-blue-400/25 to-violet-400/30 text-teal-800 dark:text-teal-200 flex items-center justify-center text-xs font-bold">
+            {initials}
           </div>
-          <div className="text-[11px] text-[color:var(--text-muted)] truncate">{cfg.userTitle}</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm text-slate-900 dark:text-white font-bold truncate">
+              {displayName}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate capitalize">
+              {displayRole} · {roomLabel}
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              showToast(`${displayName} · ${displayRole}`)
+              setScreen(role === 'owner' ? 'settings' : role === 'parent' ? 'child' : 'ftoday')
+            }}
+            className="obsidian-pill rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1.5 hover:bg-white/10"
+          >
+            <UserRound className="w-3.5 h-3.5" />
+            Profile
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm('Sign out of Haeru?')) logout()
+            }}
+            className="obsidian-pill rounded-xl px-3 py-2 text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center justify-center gap-1.5 hover:bg-rose-500/10"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Logout
+          </button>
         </div>
       </div>
     </aside>

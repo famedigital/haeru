@@ -1,12 +1,23 @@
 const KEY = 'dev-pulse-key'
+const TOKEN_KEY = 'haeru_token'
 
 export async function apiFetch<T = unknown>(
   path: string,
   init?: RequestInit & { auth?: boolean },
 ): Promise<{ ok: boolean; status: number; data?: T; error?: unknown }> {
   const headers = new Headers(init?.headers)
-  headers.set('Content-Type', 'application/json')
-  if (init?.auth !== false) headers.set('X-Pulse-Key', KEY)
+  if (!headers.has('Content-Type') && init?.body) {
+    headers.set('Content-Type', 'application/json')
+  }
+  if (init?.auth !== false) {
+    headers.set('X-Pulse-Key', KEY)
+    try {
+      const token = localStorage.getItem(TOKEN_KEY)
+      if (token) headers.set('Authorization', `Bearer ${token}`)
+    } catch {
+      /* ignore */
+    }
+  }
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 12_000)
   try {

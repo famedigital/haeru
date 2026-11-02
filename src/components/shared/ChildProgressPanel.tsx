@@ -1,102 +1,138 @@
-import { useMemo, useState } from 'react'
-import {
-  ELDS_DOMAINS,
-  ELDS_MOTTO,
-  KINLEY_RADAR_SERIES,
-  OBSERVATION_WINDOWS,
-} from '../../lib/elds/domains'
+import { useState } from 'react'
+import { ELDS_DOMAINS, ELDS_MOTTO, OBSERVATION_WINDOWS } from '../../lib/elds/domains'
+import type { RadarSeries } from '../../types/enterprise'
 import { GlassBadge, GlassCard, GlassChips, RadarChart3D } from '../ui'
 
-const DOMAIN_COUNTS = [
-  { ap: 12, bl: 4, nya: 1 },
-  { ap: 10, bl: 5, nya: 2 },
-  { ap: 11, bl: 5, nya: 2 },
-  { ap: 7, bl: 3, nya: 1 },
-  { ap: 13, bl: 4, nya: 1 },
-  { ap: 9, bl: 3, nya: 0 },
-]
+export type DomainStat = {
+  domain: string
+  ap: number
+  bl: number
+  nya: number
+  total: number
+  score: number
+  lastObserved?: string | null
+  voiceAiCount?: number
+}
 
-function matchDomainIndex(label: string): number {
-  const n = label.toLowerCase()
-  return ELDS_DOMAINS.findIndex((d) => {
-    const dd = d.toLowerCase()
-    return n.includes(dd) || dd.includes(n) || n.replace(/&/g, 'and') === dd.replace(/&/g, 'and')
-  })
+export type ProgressMilestone = {
+  id: string
+  date: string
+  domain: string
+  indicator: string
+  rating: string
+  source: string
+  facilitatorName: string
+  isConfirmed: boolean
 }
 
 interface ChildProgressPanelProps {
   childFirstName: string
   staff?: boolean
-  /** Confirmed Haeru Voice AI domain labels (e.g. "Approaches to Learning") */
-  liveDomainHits?: string[]
+  domainStats?: DomainStat[]
+  radarSeries?: RadarSeries[]
+  recentMilestones?: ProgressMilestone[]
+  loading?: boolean
 }
+
+const EMPTY_STATS: DomainStat[] = ELDS_DOMAINS.map((domain) => ({
+  domain,
+  ap: 0,
+  bl: 0,
+  nya: 0,
+  total: 0,
+  score: 0,
+}))
+
+const EMPTY_RADAR: RadarSeries[] = [
+  {
+    window: 'Oct–Nov',
+    color: '#2dd4bf',
+    fill: 'rgba(45, 212, 191, 0.18)',
+    dots: true,
+    values: [0.35, 0.35, 0.35, 0.35, 0.35, 0.35],
+  },
+]
 
 export function ChildProgressPanel({
   childFirstName,
   staff = false,
-  liveDomainHits = [],
+  domainStats,
+  radarSeries,
+  recentMilestones = [],
+  loading = false,
 }: ChildProgressPanelProps) {
   const [win, setWin] = useState(2)
-
-  const hitCounts = useMemo(() => {
-    const counts = Array.from({ length: ELDS_DOMAINS.length }, () => 0)
-    for (const label of liveDomainHits) {
-      const i = matchDomainIndex(label)
-      if (i >= 0) counts[i]! += 1
-    }
-    return counts
-  }, [liveDomainHits])
+  const stats = domainStats?.length ? domainStats : EMPTY_STATS
+  const series = radarSeries?.length ? radarSeries : EMPTY_RADAR
 
   return (
     <div className="grid lg:grid-cols-[1.15fr_1fr] gap-5">
       <div className="space-y-4">
-        <RadarChart3D series={KINLEY_RADAR_SERIES} title="Across all six domains" />
+        <RadarChart3D series={series} title="Across all six domains" />
         <div className="obsidian-pill rounded-xl px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
           {ELDS_MOTTO} Observations are confirmed by the Centre Director before families see them.
         </div>
-        {liveDomainHits.length > 0 ? (
-          <div className="obsidian-pill rounded-xl px-4 py-3 text-xs text-teal-800 dark:text-teal-200 border border-teal-400/30">
-            Haeru Voice AI added <b>{liveDomainHits.length}</b> confirmed observation
-            {liveDomainHits.length === 1 ? '' : 's'} for {childFirstName} — domains below are marked.
-          </div>
+        {recentMilestones.length > 0 ? (
+          <GlassCard padding="md" className="space-y-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Recent milestones</h3>
+            <ul className="space-y-2 max-h-56 overflow-y-auto">
+              {recentMilestones.slice(0, 8).map((m) => (
+                <li key={m.id} className="text-xs text-slate-600 dark:text-slate-300 border-b border-slate-200/60 dark:border-white/5 pb-2">
+                  <div className="flex flex-wrap gap-1.5 mb-1">
+                    <GlassBadge tone={m.rating === 'ap' ? 'ap' : m.rating === 'bl' ? 'bl' : 'nya'}>
+                      {m.rating}
+                    </GlassBadge>
+                    <GlassBadge tone="violet">{m.domain}</GlassBadge>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {new Date(m.date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <b className="text-slate-800 dark:text-slate-100 block">{m.indicator}</b>
+                  <span className="text-slate-500 dark:text-slate-400">
+                    {m.facilitatorName} · {m.source}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </GlassCard>
         ) : null}
       </div>
 
       <GlassCard padding="lg" className="space-y-4">
         <div className="flex flex-col gap-3">
-          <h2 className="text-lg text-slate-900 dark:text-white">By domain · 4-year checklist</h2>
+          <h2 className="text-lg text-slate-900 dark:text-white">By domain · MoESD ELDS</h2>
           <GlassChips items={[...OBSERVATION_WINDOWS]} value={win} onChange={setWin} />
         </div>
 
-        <div className="space-y-3">
-          {ELDS_DOMAINS.map((d, i) => {
-            const base = DOMAIN_COUNTS[i]!
-            const boost = hitCounts[i] ?? 0
-            const ap = base.ap + boost
-            const { bl, nya } = base
-            const t = ap + bl + nya
-            return (
-              <div key={d} className="space-y-1.5">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <b className="text-slate-700 dark:text-slate-200 min-w-[140px] flex items-center gap-2">
-                    {d}
-                    {boost > 0 ? (
-                      <GlassBadge tone="ap">+{boost} Voice AI</GlassBadge>
-                    ) : null}
-                  </b>
-                  <span className="text-slate-500 dark:text-slate-400">
-                    {ap} of {t} achieved
-                  </span>
+        {loading ? (
+          <p className="text-sm text-slate-600 dark:text-slate-300">Loading live progress…</p>
+        ) : (
+          <div className="space-y-3">
+            {stats.map((d) => {
+              const t = Math.max(1, d.total)
+              return (
+                <div key={d.domain} className="space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <b className="text-slate-700 dark:text-slate-200 min-w-[140px] flex items-center gap-2">
+                      {d.domain}
+                      {(d.voiceAiCount ?? 0) > 0 ? (
+                        <GlassBadge tone="ap">+{d.voiceAiCount} Voice AI</GlassBadge>
+                      ) : null}
+                    </b>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {d.ap} of {d.total} achieved · {d.score}%
+                    </span>
+                  </div>
+                  <div className="flex h-3 rounded-full overflow-hidden gap-0.5 bg-slate-200/90 dark:bg-slate-900/50">
+                    <i className="bg-emerald-500" style={{ width: `${(d.ap / t) * 100}%` }} />
+                    <i className="bg-amber-400" style={{ width: `${(d.bl / t) * 100}%` }} />
+                    <i className="bg-rose-400" style={{ width: `${(d.nya / t) * 100}%` }} />
+                  </div>
                 </div>
-                <div className="flex h-3 rounded-full overflow-hidden gap-0.5 bg-slate-200/90 dark:bg-slate-900/50">
-                  <i className="bg-emerald-500" style={{ width: `${(ap / t) * 100}%` }} />
-                  <i className="bg-amber-400" style={{ width: `${(bl / t) * 100}%` }} />
-                  <i className="bg-rose-400" style={{ width: `${(nya / t) * 100}%` }} />
-                </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-4 text-[11px] text-slate-500 dark:text-slate-400">
           <span className="inline-flex items-center gap-1.5">
@@ -111,20 +147,12 @@ export function ChildProgressPanel({
         </div>
 
         {!staff && (
-          <div className="grid sm:grid-cols-2 gap-3 pt-2">
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/30 p-3">
-              <b className="text-emerald-700 dark:text-emerald-300 text-sm">Something to celebrate</b>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                {childFirstName} can now retell a familiar story in the right order, and helps
-                younger friends tidy up.
-              </p>
-            </div>
-            <div className="rounded-xl bg-amber-500/10 border border-amber-400/30 p-3">
-              <b className="text-amber-700 dark:text-amber-200 text-sm">Working on together</b>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                Hopping on one foot. Try a hopscotch game at home, just for fun!
-              </p>
-            </div>
+          <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/30 p-3">
+            <b className="text-emerald-700 dark:text-emerald-300 text-sm">Live from school</b>
+            <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+              {childFirstName}&apos;s domain bars update when facilitators record checklists or Haeru
+              Voice AI moments are Director-confirmed.
+            </p>
           </div>
         )}
 

@@ -140,6 +140,7 @@ model EldsObservation {
   confirmedBy   User?     @relation("OwnerConfirmations", fields: [confirmedById], references: [id])
 
   @@index([childId, window])
+  @@index([childId, domain])
   @@index([isConfirmed])
 }
 

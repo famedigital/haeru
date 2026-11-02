@@ -8,10 +8,11 @@ const ROOM_CHIPS = ['All rooms', 'Toddlers', 'Nursery', 'Kindergarten']
 const ROOM_IDS: Array<RoomId | 'all'> = ['all', 'toddlers', 'nursery', 'kg']
 
 export function HeaderTopBar() {
-  const { role, roomFilter, setRoomFilter, screen, theme, toggleTheme } = useAppStore()
+  const { role, roomFilter, setRoomFilter, screen, theme, toggleTheme, currentUser } = useAppStore()
   if (role === 'signin' || role === 'landing') return null
 
   const cfg = ROLE_CONFIGS[role as Exclude<Role, 'signin' | 'landing'>]
+  const displayFirst = (currentUser?.name || cfg.userName).split(' ')[0]
   const showRooms = role === 'owner' && (screen === 'children' || screen === 'today')
   const chipIndex = Math.max(0, ROOM_IDS.indexOf(roomFilter))
 
@@ -41,10 +42,10 @@ export function HeaderTopBar() {
             <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-400 border-2 border-[color:var(--pill-bg)]" />
           </button>
           <div className="obsidian-pill rounded-xl px-3 py-2 hidden sm:block">
-            <div className="text-xs font-bold text-[color:var(--text-main)]">
-              {cfg.userName.split(' ')[0]}
+            <div className="text-xs font-bold text-slate-900 dark:text-white">
+              {displayFirst}
             </div>
-            <div className="text-[10px] text-[color:var(--text-muted)]">{cfg.label}</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">{cfg.label}</div>
           </div>
         </div>
       </div>

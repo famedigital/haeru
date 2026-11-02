@@ -19,11 +19,15 @@ import {
   completeAdmission,
   createEldsObservation,
   createStaff,
+  getAuthMe,
   getCentre,
+  getChild,
+  getChildProgress,
   listChildrenDb,
   listEldsObservations,
   listStaff,
   loginUser,
+  logoutAuth,
   patchCentre,
   saveCentreBankQr,
 } from './enterpriseCrud'
@@ -70,7 +74,17 @@ function authorize(req: IncomingMessage): boolean {
   if (typeof keyHeader === 'string' && keyHeader === DEV_KEY) return true
   const auth = req.headers.authorization
   if (typeof auth === 'string' && auth === `Bearer ${DEV_KEY}`) return true
+  // Session tokens from login (uat-<userId>)
+  if (typeof auth === 'string' && /^Bearer\s+uat-/i.test(auth)) return true
   return false
+}
+
+function bearerToken(req: IncomingMessage): string | null {
+  const auth = req.headers.authorization
+  if (typeof auth === 'string' && auth.toLowerCase().startsWith('bearer ')) {
+    return auth.slice(7).trim()
+  }
+  return null
 }
 
 export async function handlePulseHttp(
@@ -225,6 +239,18 @@ export async function handlePulseHttp(
       return true
     }
 
+    if (req.method === 'GET' && url === '/api/auth/me') {
+      const result = await getAuthMe(bearerToken(req))
+      send(res, result.status, result)
+      return true
+    }
+
+    if (req.method === 'POST' && url === '/api/auth/logout') {
+      const result = await logoutAuth()
+      send(res, result.status, result)
+      return true
+    }
+
     if (req.method === 'GET' && url === '/api/centre') {
       const result = await getCentre()
       send(res, result.status, result)
@@ -304,8 +330,27 @@ export async function handlePulseHttp(
       return true
     }
 
-    if (req.method === 'GET' && url === '/api/children') {
-      const result = await listChildrenDb()
+    const childProgress = url.match(/^\/api\/children\/([^/]+)\/progress\/?$/)
+    if (req.method === 'GET' && childProgress) {
+      const id = decodeURIComponent(childProgress[1]!)
+      const result = await getChildProgress(id)
+      send(res, result.status, result)
+      return true
+    }
+
+    const childOne = url.match(/^\/api\/children\/([^/]+)\/?$/)
+    if (req.method === 'GET' && childOne) {
+      const id = decodeURIComponent(childOne[1]!)
+      const result = await getChild(id)
+      send(res, result.status, result)
+      return true
+    }
+
+    if (req.method === 'GET' && (url === '/api/children' || url.startsWith('/api/children?'))) {
+      const q = new URL(url, 'http://local')
+      const room = q.searchParams.get('room') || undefined
+      const centreId = q.searchParams.get('centreId') || undefined
+      const result = await listChildrenDb({ room, centreId })
       send(res, result.status, result)
       return true
     }
