@@ -53,16 +53,29 @@ async function answerCallback(callbackId: string, text: string) {
   })
 }
 
+function extractPairingToken(text: string): string | null {
+  const t = text.trim()
+  // Deep link: /start pair_wsh_karma  ·  /start@HaeruEccdBot pair_…
+  const start = t.match(/^\/start(?:@\w+)?\s+(pair_[A-Za-z0-9_-]+)\s*$/i)
+  if (start) return start[1]!
+  // Bare token (staff paste from Director): pair_wsh_karma
+  const bare = t.match(/^(pair_[A-Za-z0-9_-]+)\s*$/i)
+  if (bare) return bare[1]!
+  // Explicit: /pair pair_wsh_karma
+  const cmd = t.match(/^\/pair(?:@\w+)?\s+(pair_[A-Za-z0-9_-]+)\s*$/i)
+  if (cmd) return cmd[1]!
+  return null
+}
+
 async function handlePairing(text: string, from: TgUser, chat: TgChat) {
-  const m = text.trim().match(/^\/start(?:@\w+)?\s+(pair_\S+)/i)
-  if (!m) {
+  const token = extractPairingToken(text)
+  if (!token) {
     await tgReply(
       chat.id,
-      '👋 Welcome to Haeru Voice AI! Please use your staff pairing link from your Director.',
+      '👋 Welcome to Haeru Voice AI!\n\nTo pair, send your code (e.g. pair_wsh_karma) or open the Director link:\nhttps://t.me/HaeruEccdBot?start=pair_wsh_karma',
     )
     return
   }
-  const token = m[1]!
   const user = await prisma.user.findFirst({ where: { pairingToken: token } })
   if (!user) {
     await tgReply(chat.id, '❌ That pairing link is invalid or already used. Ask your Director for a new one.')
@@ -184,7 +197,7 @@ export async function processTelegramUpdate(update: TelegramUpdate): Promise<voi
   if (!msg?.from) return
 
   const text = msg.text?.trim() || ''
-  if (text.startsWith('/start')) {
+  if (text.startsWith('/start') || text.startsWith('/pair') || /^pair_[A-Za-z0-9_-]+$/i.test(text)) {
     await handlePairing(text, msg.from, msg.chat)
     return
   }
@@ -197,7 +210,7 @@ export async function processTelegramUpdate(update: TelegramUpdate): Promise<voi
     if (text) {
       await tgReply(
         msg.chat.id,
-        '👋 Welcome to Haeru Voice AI! Please use your staff pairing link from your Director.',
+        '👋 Welcome to Haeru Voice AI!\n\nSend your pairing code (pair_wsh_karma) or open:\nhttps://t.me/HaeruEccdBot?start=pair_wsh_karma',
       )
     }
     return
