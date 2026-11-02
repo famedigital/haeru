@@ -25,7 +25,17 @@ export async function registerTelegramWebhook(): Promise<WebhookRegResult> {
     allowed_updates: ['message', 'callback_query'],
     drop_pending_updates: false,
   }
-  if (secret) body.secret_token = secret
+  // Telegram only allows A-Z a-z 0-9 _ - (1–256). Slash/base64 secrets fail setWebhook.
+  if (secret) {
+    if (!/^[A-Za-z0-9_-]{1,256}$/.test(secret)) {
+      return {
+        ok: false,
+        error:
+          'TELEGRAM_WEBHOOK_SECRET has illegal characters (use A–Z a–z 0–9 _ - only)',
+      }
+    }
+    body.secret_token = secret
+  }
 
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {

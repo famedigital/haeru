@@ -92,10 +92,7 @@ export async function handlePulseHttp(
     }
 
     if (req.method === 'GET' && url === '/api/telegram/webhook-status') {
-      if (!authorize(req)) {
-        send(res, 401, { ok: false, error: 'Unauthorized' })
-        return true
-      }
+      // Read-only Telegram registration status — no child data
       const info = await getTelegramWebhookInfo()
       send(res, 200, { ok: true, data: info })
       return true
