@@ -3,7 +3,6 @@
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { CHILDREN } from '../data/enterprise'
 import {
   postConfirmMoment,
   postObservationFromHermes,
@@ -217,7 +216,8 @@ export async function handlePulseHttp(
         return true
       }
       const room = decodeURIComponent(classroomMatch[1]!)
-      const ids = CHILDREN.filter((c) => c.room === room).map((c) => c.id)
+      const roster = await listChildrenDb({ room })
+      const ids = roster.ok ? roster.data.map((c) => c.id) : []
       send(res, 200, { ok: true, data: listDeliveredMomentsForChildren(ids) })
       return true
     }

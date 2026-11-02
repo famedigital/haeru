@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { LEAVE_REQUESTS, formatNu } from '../../data/enterprise'
+import { formatNu } from '../../data/enterprise'
 import { apiFetch } from '../../lib/api/httpClient'
 import { useAppStore } from '../../lib/store/appStore'
-import { GlassBadge, GlassButton, GlassCard } from '../ui'
+import { GlassButton, GlassCard } from '../ui'
 import { PageHeader } from '../shared/PageHeader'
 
 type StaffRow = {
@@ -157,30 +157,14 @@ export function StaffLeave() {
               </tr>
             </thead>
             <tbody>
-              {LEAVE_REQUESTS.map((row) => (
-                <tr key={row.staff + row.dates} className="border-t border-white/5">
-                  <td className="px-5 py-3 text-slate-900 dark:text-white font-bold">{row.staff}</td>
-                  <td className="px-5 py-3">
-                    <GlassBadge tone={row.type === 'Sick' ? 'nya' : 'neutral'}>{row.type}</GlassBadge>
-                  </td>
-                  <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{row.dates}</td>
-                  <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{row.reason}</td>
-                  <td className="px-5 py-3 text-right whitespace-nowrap">
-                    {row.status === 'pending' ? (
-                      <div className="flex justify-end gap-2">
-                        <GlassButton variant="ghost" className="!text-xs !py-1.5" onClick={() => showToast('Leave declined')}>
-                          Decline
-                        </GlassButton>
-                        <GlassButton variant="sm" onClick={() => showToast('Leave approved')}>
-                          Approve
-                        </GlassButton>
-                      </div>
-                    ) : (
-                      <GlassBadge tone="ap">Approved</GlassBadge>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-5 py-8 text-sm text-slate-500 dark:text-slate-400"
+                >
+                  No leave requests yet. Staff leave workflow will list live requests here.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

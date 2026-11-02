@@ -71,7 +71,12 @@ export function ChildProfile360() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!selectedChildId) return
+    if (!selectedChildId) {
+      setChild(null)
+      setProgress(null)
+      setLoading(false)
+      return
+    }
     let cancelled = false
     setLoading(true)
     void Promise.all([

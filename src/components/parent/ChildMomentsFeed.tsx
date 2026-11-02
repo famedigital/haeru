@@ -1,6 +1,6 @@
 import { Heart, ImageOff } from 'lucide-react'
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import { CHILDREN, childFirstName } from '../../data/enterprise'
+import { childFirstName } from '../../data/enterprise'
 import { apiFetch } from '../../lib/api/httpClient'
 import {
   listAllDeliveredMoments,
@@ -13,9 +13,6 @@ import { useAppStore } from '../../lib/store/appStore'
 import { GlassBadge, GlassCard } from '../ui'
 import { PageHeader } from '../shared/PageHeader'
 
-/** Facilitator demo classroom — nursery (matches PhotoStaging). */
-const FACILITATOR_ROOM = 'nursery'
-
 type LiveHermes = {
   id: string
   childName: string
@@ -27,9 +24,14 @@ type LiveHermes = {
   source?: string
 }
 
+type LiveChild = { id: string; name: string; room: string }
+
 function liveToRow(m: LiveHermes): MomentRow {
   let title = `${m.childName.split(' ')[0]} — learning moment`
-  let desc = m.transcription || m.domain
+  let desc =
+    m.domain
+      ? `${m.childName.split(' ')[0]} was observed during class — a classmate-safe summary for the family.`
+      : 'Learning moment'
   try {
     const raw = m.rawHermesJson ? JSON.parse(m.rawHermesJson) : null
     if (raw?.parentSafeTitle) title = raw.parentSafeTitle
@@ -53,36 +55,49 @@ function liveToRow(m: LiveHermes): MomentRow {
   }
 }
 
-function feedSnapshot(role: string, selectedChildId: string): MomentRow[] {
-  if (role === 'owner') return listAllDeliveredMoments()
-  if (role === 'facilitator') {
-    const ids = CHILDREN.filter((c) => c.room === FACILITATOR_ROOM).map((c) => c.id)
-    return listDeliveredMomentsForChildren(ids)
-  }
-  return listParentMomentsForChild(selectedChildId)
-}
-
 function useFeedMoments(): MomentRow[] {
-  const { role, selectedChildId } = useAppStore()
+  const { role, selectedChildId, currentUser } = useAppStore()
+  const [roomIds, setRoomIds] = useState<string[]>([])
+  const [live, setLive] = useState<MomentRow[]>([])
+
+  useEffect(() => {
+    if (role !== 'facilitator') {
+      setRoomIds([])
+      return
+    }
+    const room = currentUser?.room || 'kg'
+    let cancelled = false
+    void apiFetch<LiveChild[]>(`/children?room=${encodeURIComponent(room)}`).then((r) => {
+      if (cancelled) return
+      setRoomIds(r.ok && r.data ? r.data.map((c) => c.id) : [])
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [role, currentUser?.room])
+
   const legacy = useSyncExternalStore(
     subscribePulseStore,
-    () => feedSnapshot(role, selectedChildId),
-    () => feedSnapshot(role, selectedChildId),
+    () => {
+      if (role === 'owner') return listAllDeliveredMoments()
+      if (role === 'facilitator') return listDeliveredMomentsForChildren(roomIds)
+      return listParentMomentsForChild(selectedChildId)
+    },
+    () => [] as MomentRow[],
   )
-  const [live, setLive] = useState<MomentRow[]>([])
 
   useEffect(() => {
     if (role !== 'parent' && role !== 'caregiver') {
       setLive([])
       return
     }
+    if (!selectedChildId) return
     let cancelled = false
     void apiFetch<{ live?: LiveHermes[] }>(
       `/parents/child/${encodeURIComponent(selectedChildId)}/moments`,
     ).then((r) => {
       if (cancelled) return
-      const rows = (r.data?.live ?? []).map(liveToRow)
-      setLive(rows)
+      setLive((r.data?.live ?? []).map(liveToRow))
     })
     return () => {
       cancelled = true
@@ -166,7 +181,6 @@ function FeedPost({ moment, showChild }: { moment: MomentRow; showChild: boolean
         </p>
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <span>{moment.domain}</span>
-          {moment.telegramSimulated ? <GlassBadge tone="neutral">Telegram simulated</GlassBadge> : null}
         </div>
         <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 pt-1">
           <Heart className="w-3.5 h-3.5" aria-hidden />
@@ -178,8 +192,23 @@ function FeedPost({ moment, showChild }: { moment: MomentRow; showChild: boolean
 }
 
 export function ChildMomentsFeed() {
-  const { role, selectedChildId } = useAppStore()
+  const { role, selectedChildId, currentUser } = useAppStore()
   const moments = useFeedMoments()
+  const [childName, setChildName] = useState('your child')
+
+  useEffect(() => {
+    if ((role !== 'parent' && role !== 'caregiver') || !selectedChildId) return
+    let cancelled = false
+    void apiFetch<{ name?: string }>(`/children/${encodeURIComponent(selectedChildId)}`).then(
+      (r) => {
+        if (cancelled) return
+        if (r.ok && r.data?.name) setChildName(r.data.name)
+      },
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [role, selectedChildId])
 
   const meta = useMemo(() => {
     if (role === 'owner') {
@@ -191,22 +220,22 @@ export function ChildMomentsFeed() {
       }
     }
     if (role === 'facilitator') {
+      const room = currentUser?.room || 'kg'
       return {
         title: 'Classroom feed',
-        subtitle: 'Delivered posts for your nursery children',
+        subtitle: `Delivered posts for your ${room} children`,
         empty: 'No delivered posts for this classroom yet.',
         showChild: true,
       }
     }
-    const child = CHILDREN.find((c) => c.id === selectedChildId)
-    const first = child ? childFirstName(child.name) : 'your child'
+    const first = childFirstName(childName)
     return {
       title: 'Photos & updates',
       subtitle: `Moments from ${first}'s days at school`,
       empty: `No posts for ${first} yet. When school shares photos or voice moments — and the Director confirms — they appear here.`,
       showChild: false,
     }
-  }, [role, selectedChildId])
+  }, [role, childName, currentUser?.room])
 
   return (
     <div className="space-y-6">
@@ -221,7 +250,7 @@ export function ChildMomentsFeed() {
       {moments.length === 0 ? (
         <FeedEmpty subtitle={meta.empty} />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {moments.map((m) => (
             <FeedPost key={m.id} moment={m} showChild={meta.showChild} />
           ))}

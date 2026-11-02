@@ -57,22 +57,30 @@ export default function GlobalAuditLog() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-slate-200/60 dark:border-white/5">
-                <td className="px-5 py-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                  {new Date(r.timestamp).toISOString().replace('T', ' ').slice(0, 19)}
-                </td>
-                <td className="px-5 py-3 text-slate-900 dark:text-white font-bold">{r.actorEmail}</td>
-                <td className="px-5 py-3">
-                  <GlassBadge tone="neutral">{r.action}</GlassBadge>
-                </td>
-                <td className="px-5 py-3 text-slate-700 dark:text-slate-200">{r.target}</td>
-                <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{r.ipAddress}</td>
-                <td className="px-5 py-3 text-slate-600 dark:text-slate-300 max-w-xs">
-                  {r.reasonNotes}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-5 py-8 text-sm text-slate-500 dark:text-slate-400">
+                  No audit events yet. Live platform actions will appear here.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((r) => (
+                <tr key={r.id} className="border-t border-slate-200/60 dark:border-white/5">
+                  <td className="px-5 py-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                    {new Date(r.timestamp).toISOString().replace('T', ' ').slice(0, 19)}
+                  </td>
+                  <td className="px-5 py-3 text-slate-900 dark:text-white font-bold">{r.actorEmail}</td>
+                  <td className="px-5 py-3">
+                    <GlassBadge tone="neutral">{r.action}</GlassBadge>
+                  </td>
+                  <td className="px-5 py-3 text-slate-700 dark:text-slate-200">{r.target}</td>
+                  <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{r.ipAddress}</td>
+                  <td className="px-5 py-3 text-slate-600 dark:text-slate-300 max-w-xs">
+                    {r.reasonNotes}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </GlassCard>

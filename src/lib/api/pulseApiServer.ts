@@ -13,17 +13,8 @@ import {
 } from './schemas'
 import type { CaptionChildRef } from '../media/captionTags'
 
-/** Demo roster for caption → child resolution (matches enterprise CHILDREN). */
-export const PULSE_CHILD_ROSTER: CaptionChildRef[] = [
-  { id: 'c1', name: 'Kinley Wangchuk' },
-  { id: 'c2', name: 'Tashi Wangchuk' },
-  { id: 'c3', name: 'Pema Dorji' },
-  { id: 'c4', name: 'Yeshi Lhamo' },
-  { id: 'c5', name: 'Jigme Namgyel' },
-  { id: 'c6', name: 'Rinzin Dorji' },
-  { id: 'c7', name: 'Sonam Choden' },
-  { id: 'c8', name: 'Chimi Dema' },
-]
+/** Caption → child resolution. Prefer live roster from PhotoStaging / DB; keep empty by default. */
+export const PULSE_CHILD_ROSTER: CaptionChildRef[] = []
 
 export type MomentRow = {
   id: string

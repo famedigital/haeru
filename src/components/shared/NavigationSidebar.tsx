@@ -136,7 +136,7 @@ function NavPanel({ showClose, onClose }: PanelProps) {
   }
 
   return (
-    <div className="flex h-full w-full flex-col gap-4 p-4 overflow-y-auto">
+    <div className="flex h-full w-full flex-col gap-4 p-4 overflow-y-auto no-scrollbar">
       <div className="flex items-start justify-between gap-2 px-2 pt-2">
         <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -270,7 +270,7 @@ export function NavigationSidebar({ mobileOpen = false, onMobileClose }: Props) 
 
   return (
     <>
-      <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl sticky top-0 h-screen">
+      <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-[color:var(--glass-border)] bg-[color:var(--pill-bg)] backdrop-blur-xl sticky top-0 h-screen overflow-hidden">
         <NavPanel />
       </aside>
 

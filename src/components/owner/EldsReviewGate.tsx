@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react'
-import { ELDS_REVIEW } from '../../data/enterprise'
 import {
   listPendingDirectorMoments,
   postConfirmMoment,
@@ -26,7 +25,7 @@ export function EldsReviewGate() {
     <div className="space-y-6">
       <PageHeader
         title="Progress review"
-        subtitle="Oct–Nov window · ELDS 2019 checklists + Hermes voice & photo moments"
+        subtitle="Live Hermes moments · Director confirm before parents see them"
         actions={
           <GlassButton
             onClick={() => {
@@ -38,7 +37,7 @@ export function EldsReviewGate() {
               showToast(
                 n > 0
                   ? `${n} Hermes moment(s) confirmed · families can see them in the feed`
-                  : '24 static ratings confirmed · families can now see them',
+                  : 'Nothing pending to confirm',
               )
             }}
           >
@@ -48,18 +47,25 @@ export function EldsReviewGate() {
       />
 
       <div className="obsidian-pill rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
-        {ELDS_MOTTO} Families see a rating or Hermes moment only after you confirm it.
+        {ELDS_MOTTO} Families see a Hermes moment only after you confirm it.
       </div>
 
-      {hermesPending.length > 0 && (
+      {hermesPending.length === 0 ? (
+        <GlassCard padding="lg">
+          <h2 className="text-lg text-slate-900 dark:text-white">Queue clear</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
+            No Hermes voice or photo moments waiting. Checklist ratings from Record progress land
+            here once that confirm path is wired to the database.
+          </p>
+        </GlassCard>
+      ) : (
         <GlassCard padding="none">
           <div className="p-5 border-b border-slate-200 dark:border-white/10">
             <h2 className="text-lg text-slate-900 dark:text-white">
               Hermes moments awaiting confirmation
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Facilitator already verified · your confirm delivers to the child feed (and simulated
-              Telegram)
+              Facilitator already verified · your confirm delivers to the child feed
             </p>
           </div>
           <ul className="divide-y divide-slate-200/80 dark:divide-white/5">
@@ -113,63 +119,6 @@ export function EldsReviewGate() {
           </ul>
         </GlassCard>
       )}
-
-      <GlassCard padding="none">
-        <div className="p-5 border-b border-slate-200 dark:border-white/10">
-          <h2 className="text-lg text-slate-900 dark:text-white">Checklist ratings awaiting confirmation</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 text-left">
-                <th className="px-5 py-3">Child</th>
-                <th className="px-5 py-3">Indicator</th>
-                <th className="px-5 py-3">Rating</th>
-                <th className="px-5 py-3">Remark</th>
-                <th className="px-5 py-3">By</th>
-                <th className="px-5 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {ELDS_REVIEW.map((row) => (
-                <tr
-                  key={row.childId + row.indicator}
-                  className="border-t border-slate-200/80 dark:border-white/5"
-                >
-                  <td className="px-5 py-3 text-slate-900 dark:text-white font-bold">
-                    {row.childName}
-                  </td>
-                  <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{row.indicator}</td>
-                  <td className="px-5 py-3">
-                    <GlassBadge rating={row.rating} />
-                  </td>
-                  <td className="px-5 py-3 text-slate-500 dark:text-slate-400 text-xs">
-                    {row.remark || '—'}
-                  </td>
-                  <td className="px-5 py-3 text-slate-500 dark:text-slate-400 text-xs">{row.by}</td>
-                  <td className="px-5 py-3 text-right whitespace-nowrap">
-                    <div className="flex justify-end gap-2">
-                      <GlassButton
-                        variant="ghost"
-                        className="!text-xs !py-1.5"
-                        onClick={() => showToast('Sent back to facilitator with a question')}
-                      >
-                        Query
-                      </GlassButton>
-                      <GlassButton
-                        variant="sm"
-                        onClick={() => showToast('Rating confirmed')}
-                      >
-                        Confirm
-                      </GlassButton>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </GlassCard>
     </div>
   )
 }

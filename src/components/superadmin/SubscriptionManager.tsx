@@ -91,31 +91,39 @@ export default function SubscriptionManager() {
             </tr>
           </thead>
           <tbody>
-            {SAAS_INVOICES.map((inv) => (
-              <tr key={inv.id} className="border-t border-slate-200/60 dark:border-white/5">
-                <td className="px-5 py-3 font-bold text-slate-900 dark:text-white">{inv.id}</td>
-                <td className="px-5 py-3 text-slate-700 dark:text-slate-200">{inv.centreName}</td>
-                <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{inv.billingMonth}</td>
-                <td className="px-5 py-3 text-right text-slate-900 dark:text-white">
-                  {formatNu(inv.amountNu)}
-                </td>
-                <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
-                  {inv.method}
-                  {inv.journal ? (
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400">
-                      {inv.journal}
-                    </span>
-                  ) : null}
-                </td>
-                <td className="px-5 py-3">
-                  <GlassBadge
-                    tone={inv.status === 'paid' ? 'ap' : inv.status === 'due' ? 'bl' : 'nya'}
-                  >
-                    {inv.status}
-                  </GlassBadge>
+            {SAAS_INVOICES.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-5 py-8 text-sm text-slate-500 dark:text-slate-400">
+                  No SaaS invoices yet. Platform billing will list live centre invoices here.
                 </td>
               </tr>
-            ))}
+            ) : (
+              SAAS_INVOICES.map((inv) => (
+                <tr key={inv.id} className="border-t border-slate-200/60 dark:border-white/5">
+                  <td className="px-5 py-3 font-bold text-slate-900 dark:text-white">{inv.id}</td>
+                  <td className="px-5 py-3 text-slate-700 dark:text-slate-200">{inv.centreName}</td>
+                  <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{inv.billingMonth}</td>
+                  <td className="px-5 py-3 text-right text-slate-900 dark:text-white">
+                    {formatNu(inv.amountNu)}
+                  </td>
+                  <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
+                    {inv.method}
+                    {inv.journal ? (
+                      <span className="block text-[10px] text-slate-500 dark:text-slate-400">
+                        {inv.journal}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="px-5 py-3">
+                    <GlassBadge
+                      tone={inv.status === 'paid' ? 'ap' : inv.status === 'due' ? 'bl' : 'nya'}
+                    >
+                      {inv.status}
+                    </GlassBadge>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </GlassCard>

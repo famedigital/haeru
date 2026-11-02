@@ -7,8 +7,15 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { CENTRES, PARENT_CHILD_ID, ROLE_CONFIGS } from '../../data/enterprise'
+import { CENTRES, ROLE_CONFIGS } from '../../data/enterprise'
 import type { Role, RoomId } from '../../types/enterprise'
+
+function clearAppHash() {
+  if (typeof window === 'undefined') return
+  if (!window.location.hash) return
+  const clean = `${window.location.pathname}${window.location.search}`
+  window.history.replaceState(null, '', clean)
+}
 
 export type Theme = 'dark' | 'light'
 
@@ -134,7 +141,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [role, setRoleState] = useState<Role>('landing')
   const [screen, setScreenState] = useState('landing')
   const [roomFilter, setRoomFilter] = useState<RoomId | 'all'>('all')
-  const [selectedChildId, setSelectedChildId] = useState(PARENT_CHILD_ID)
+  const [selectedChildId, setSelectedChildId] = useState('')
   const [toast, setToast] = useState<string | null>(null)
   const [theme, setTheme] = useState<Theme>(readInitialTheme)
   const [currentCentreId, setCurrentCentreId] = useState<string | null>(null)
@@ -185,7 +192,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           setRoleState(u.role)
           setScreenState(homeFor(u.role))
           setCurrentCentreId(c.id)
-          if (json.data.childIds?.[0]) setSelectedChildId(json.data.childIds[0])
+          setSelectedChildId(json.data.childIds?.[0] ?? '')
+          clearAppHash()
           persistSession(u, c, t, json.data.childIds ?? [])
         } else {
           clearSessionStorage()
@@ -210,7 +218,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
                 setToken(parsed.token)
                 setRoleState(parsed.user.role)
                 setScreenState(homeFor(parsed.user.role))
-                if (parsed.childIds?.[0]) setSelectedChildId(parsed.childIds[0])
+                setSelectedChildId(parsed.childIds?.[0] ?? '')
+                clearAppHash()
               }
             }
           } catch {
@@ -240,8 +249,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       setCurrentCentreId(centre.id)
       setIsImpersonating(false)
       setImpersonationReason(null)
-      if (childIds[0]) setSelectedChildId(childIds[0])
+      setSelectedChildId(childIds[0] ?? '')
       setScreenState(homeFor(user.role))
+      clearAppHash()
       persistSession(user, centre, nextToken, childIds)
     },
     [],
@@ -257,7 +267,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     setCurrentCentreId(null)
     setIsImpersonating(false)
     setImpersonationReason(null)
-    setSelectedChildId(PARENT_CHILD_ID)
+    setSelectedChildId('')
+    clearAppHash()
     void fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined)
   }, [])
 
@@ -304,12 +315,23 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         setToast('Fees stay private to parents. Caregivers cannot view invoices.')
         return
       }
+      if (next === 'child' && !selectedChildId) {
+        if (role === 'owner' || role === 'facilitator') {
+          setScreenState('children')
+          setToast('Open a child from the directory')
+          return
+        }
+        setToast('No linked child on this account yet')
+        return
+      }
+      clearAppHash()
       setScreenState(next)
     },
-    [role],
+    [role, selectedChildId],
   )
 
   const openChild = useCallback((childId: string) => {
+    clearAppHash()
     setSelectedChildId(childId)
     setScreenState('child')
   }, [])

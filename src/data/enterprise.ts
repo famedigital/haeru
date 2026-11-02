@@ -23,8 +23,8 @@ export const ROOMS: Record<string, RoomInfo> = {
     band: '2–3 yrs',
     bg: '#f6d7ce',
     cap: 14,
-    enrolled: 12,
-    here: 11,
+    enrolled: 0,
+    here: 0,
   },
   nursery: {
     id: 'nursery',
@@ -32,8 +32,8 @@ export const ROOMS: Record<string, RoomInfo> = {
     band: '3–4 yrs',
     bg: '#fbe7bd',
     cap: 18,
-    enrolled: 17,
-    here: 15,
+    enrolled: 0,
+    here: 0,
   },
   kg: {
     id: 'kg',
@@ -41,111 +41,16 @@ export const ROOMS: Record<string, RoomInfo> = {
     band: '4–5 yrs',
     bg: '#cfe6df',
     cap: 20,
-    enrolled: 16,
-    here: 14,
+    enrolled: 0,
+    here: 0,
   },
 }
 
-export const CHILDREN: ChildRecord[] = [
-  {
-    id: 'c1',
-    code: 'WSH-24-018',
-    name: 'Kinley Wangchuk',
-    room: 'kg',
-    age: '4y 7m',
-    guardian: 'Deki Choden',
-    seed: 1,
-    feeStatus: 'paid',
-    feedConsent: true,
-    socialConsent: true,
-  },
-  {
-    id: 'c2',
-    code: 'WSH-24-019',
-    name: 'Tashi Wangchuk',
-    room: 'toddlers',
-    age: '2y 8m',
-    guardian: 'Deki Choden',
-    seed: 2,
-    feeStatus: 'due',
-    feedConsent: true,
-    socialConsent: true,
-  },
-  {
-    id: 'c3',
-    code: 'WSH-24-020',
-    name: 'Pema Dorji',
-    room: 'nursery',
-    age: '3y 9m',
-    guardian: 'Tshering Pelden',
-    seed: 3,
-    feeStatus: 'paid',
-    feedConsent: true,
-    socialConsent: true,
-  },
-  {
-    id: 'c4',
-    code: 'WSH-24-021',
-    name: 'Yeshi Lhamo',
-    room: 'nursery',
-    age: '3y 6m',
-    guardian: 'Yangchen Lhamo',
-    seed: 4,
-    feeStatus: 'overdue',
-    feedConsent: false,
-    socialConsent: false,
-  },
-  {
-    id: 'c5',
-    code: 'WSH-24-022',
-    name: 'Jigme Namgyel',
-    room: 'nursery',
-    age: '3y 11m',
-    guardian: 'Pem Choki',
-    seed: 5,
-    feeStatus: 'paid',
-    feedConsent: true,
-    socialConsent: true,
-  },
-  {
-    id: 'c6',
-    code: 'WSH-24-023',
-    name: 'Rinzin Dorji',
-    room: 'kg',
-    age: '5y 1m',
-    guardian: 'Tshering Pelden',
-    seed: 6,
-    feeStatus: 'partial',
-    feedConsent: true,
-    socialConsent: true,
-  },
-  {
-    id: 'c7',
-    code: 'WSH-24-024',
-    name: 'Sonam Choden',
-    room: 'nursery',
-    age: '3y 4m',
-    guardian: 'Sangay Dema',
-    seed: 7,
-    feeStatus: 'paid',
-    feedConsent: true,
-    socialConsent: true,
-  },
-  {
-    id: 'c8',
-    code: 'WSH-24-025',
-    name: 'Chimi Dema',
-    room: 'toddlers',
-    age: '2y 11m',
-    guardian: 'Kezang Wangmo',
-    seed: 8,
-    feeStatus: 'due',
-    feedConsent: true,
-    socialConsent: true,
-  },
-]
+/** @deprecated Live children come from /api/children — kept empty so UI never falls back to demos. */
+export const CHILDREN: ChildRecord[] = []
 
-export const PARENT_CHILD_ID = 'c1'
+/** @deprecated Use session childIds from auth — never hardcode a demo id. */
+export const PARENT_CHILD_ID = ''
 
 export const CENTRES: CentreRecord[] = [
   {
@@ -222,72 +127,9 @@ export const CENTRES: CentreRecord[] = [
   },
 ]
 
-export const SAAS_INVOICES: SaasInvoiceRow[] = [
-  {
-    id: 'SAAS-2026-10-001',
-    centreName: "Wangchuk's School of Heroes",
-    billingMonth: 'Oct 2026',
-    amountNu: 4500,
-    method: 'BoB Corporate Wire',
-    status: 'paid',
-    journal: 'JRN-884201',
-  },
-  {
-    id: 'SAAS-2026-10-002',
-    centreName: 'Druk Little Gems ECCD',
-    billingMonth: 'Oct 2026',
-    amountNu: 4500,
-    method: 'BoB Corporate Wire',
-    status: 'due',
-  },
-  {
-    id: 'SAAS-2026-10-003',
-    centreName: 'Phuentsholing Child Care',
-    billingMonth: 'Oct 2026',
-    amountNu: 8500,
-    method: 'RMA Gateway',
-    status: 'paid',
-    journal: 'RMA-12094',
-  },
-  {
-    id: 'SAAS-2026-09-002',
-    centreName: 'Druk Little Gems ECCD',
-    billingMonth: 'Sep 2026',
-    amountNu: 4500,
-    method: 'Cheque',
-    status: 'overdue',
-  },
-]
+export const SAAS_INVOICES: SaasInvoiceRow[] = []
 
-export const PLATFORM_AUDIT: PlatformAuditRow[] = [
-  {
-    id: 'aud-1',
-    timestamp: '2026-11-02T08:14:00.000Z',
-    actorEmail: 'ops@haeru.bt',
-    action: 'IMPERSONATION_STARTED',
-    target: 'ctr-wsh',
-    ipAddress: '103.7.2.11',
-    reasonNotes: 'Assisting Director with invoice proration',
-  },
-  {
-    id: 'aud-2',
-    timestamp: '2026-11-01T11:02:00.000Z',
-    actorEmail: 'ops@haeru.bt',
-    action: 'CENTRE_PROVISIONED',
-    target: 'ctr-pvl',
-    ipAddress: '103.7.2.11',
-    reasonNotes: 'New MoESD community centre onboarding',
-  },
-  {
-    id: 'aud-3',
-    timestamp: '2026-10-28T04:40:00.000Z',
-    actorEmail: 'ops@haeru.bt',
-    action: 'PLAN_UPGRADED',
-    target: 'ctr-pcc',
-    ipAddress: '103.7.2.11',
-    reasonNotes: 'Enterprise multi-branch upgrade',
-  },
-]
+export const PLATFORM_AUDIT: PlatformAuditRow[] = []
 
 export const DZONGKHAGS = [
   'Thimphu',
@@ -331,20 +173,17 @@ export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfi
         label: 'Children',
         items: [
           { id: 'children', label: 'Children', icon: 'smile' },
-          { id: 'child', label: 'Child profile', icon: 'smile' },
-          { id: 'applications', label: 'Applications', icon: 'file', badge: 3 },
+          { id: 'applications', label: 'Applications', icon: 'file' },
         ],
       },
       {
         label: 'People',
-        items: [
-          { id: 'people', label: 'Staff & leave', icon: 'briefcase', badge: 2 },
-        ],
+        items: [{ id: 'people', label: 'Staff & leave', icon: 'briefcase' }],
       },
       {
         label: 'Finance',
         items: [
-          { id: 'finance', label: 'Invoices & payments', icon: 'receipt', badge: 4 },
+          { id: 'finance', label: 'Invoices & payments', icon: 'receipt' },
           { id: 'autoinv', label: 'Automatic invoicing', icon: 'repeat' },
         ],
       },
@@ -360,7 +199,7 @@ export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfi
   facilitator: {
     label: 'Facilitator',
     userName: 'Kuenzang Tshomo',
-    userTitle: 'Nursery facilitator',
+    userTitle: 'Kindergarten facilitator',
     home: 'ftoday',
     nav: [
       { label: '', items: [{ id: 'ftoday', label: 'Today', icon: 'home' }] },
@@ -368,7 +207,6 @@ export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfi
         label: 'My room',
         items: [
           { id: 'children', label: 'My children', icon: 'smile' },
-          { id: 'child', label: 'Child profile', icon: 'smile' },
           { id: 'post', label: 'Telegram photos', icon: 'camera' },
           { id: 'feed', label: 'Classroom feed', icon: 'image' },
           { id: 'record', label: 'Record progress', icon: 'sparkle' },
@@ -385,12 +223,12 @@ export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfi
     nav: [
       { label: '', items: [{ id: 'phome', label: 'Home', icon: 'home' }] },
       {
-        label: 'Kinley',
+        label: 'My child',
         items: [
           { id: 'child', label: 'Child profile', icon: 'smile' },
           { id: 'feed', label: 'Photos & updates', icon: 'image' },
           { id: 'pprogress', label: 'Progress', icon: 'sparkle' },
-          { id: 'payments', label: 'Payments', icon: 'wallet', badge: 1 },
+          { id: 'payments', label: 'Payments', icon: 'wallet' },
         ],
       },
     ],
@@ -403,7 +241,7 @@ export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfi
     nav: [
       { label: '', items: [{ id: 'chome', label: 'Home', icon: 'home' }] },
       {
-        label: 'Kinley',
+        label: 'My child',
         items: [
           { id: 'child', label: 'Child profile', icon: 'smile' },
           { id: 'feed', label: 'Photos & updates', icon: 'image' },
@@ -420,12 +258,12 @@ export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfi
     nav: [
       {
         label: 'Platform',
-        items: [{ id: 'super_overview', label: 'Global Pulse', icon: 'activity', badge: 'p' }],
+        items: [{ id: 'super_overview', label: 'Global Pulse', icon: 'activity' }],
       },
       {
         label: 'Centres',
         items: [
-          { id: 'super_centres', label: 'ECCD Directory', icon: 'building', badge: 4 },
+          { id: 'super_centres', label: 'ECCD Directory', icon: 'building' },
           { id: 'super_provision', label: 'Provision New', icon: 'plus' },
         ],
       },
@@ -448,120 +286,15 @@ export const ROLE_CONFIGS: Record<Exclude<Role, 'signin' | 'landing'>, RoleConfi
   },
 }
 
-export const MOMENTS: MomentPost[] = [
-  {
-    id: 'm1',
-    scene: 'garden',
-    author: 'Kuenga Rinzin',
-    room: 'Kindergarten',
-    time: 'Yesterday',
-    caption:
-      'Our chilli seedlings finally sprouted. Everyone took a turn with the watering can 🌱',
-    likes: 22,
-    photoCount: 3,
-    tags: 'Kinley',
-  },
-  {
-    id: 'm2',
-    scene: 'art',
-    author: 'Sonam Yangden',
-    room: 'Nursery',
-    time: '2 hours ago',
-    caption:
-      'Rainbow hands today! We mixed primary colours and talked about which ones make green. 🎨',
-    likes: 14,
-    photoCount: 4,
-    tags: 'a classmate + friends',
-  },
-]
+export const MOMENTS: MomentPost[] = []
 
-export const LEAVE_REQUESTS: LeaveRequestRow[] = [
-  {
-    staff: 'Kuenga Rinzin',
-    type: 'Casual',
-    dates: '16–17 Oct · 2 days',
-    reason: 'Family puja in Punakha',
-    status: 'pending',
-  },
-  {
-    staff: 'Dechen Pelmo',
-    type: 'Sick',
-    dates: '13 Oct · 1 day',
-    reason: "Fever, doctor's note attached",
-    status: 'pending',
-  },
-]
+export const LEAVE_REQUESTS: LeaveRequestRow[] = []
 
-export const PAYMENT_REPORTS: PaymentReportRow[] = [
-  {
-    parent: 'Deki Choden',
-    detail: 'Kinley · October fees',
-    amount: 1000,
-    method: 'mBoB',
-    journal: 'JRN 482913',
-  },
-  {
-    parent: 'Pem Choki',
-    detail: 'Jigme · October fees',
-    amount: 7000,
-    method: 'BNB mPay',
-    journal: 'JRN 117204',
-  },
-]
+export const PAYMENT_REPORTS: PaymentReportRow[] = []
 
-export const INVOICES: InvoiceRow[] = [
-  {
-    no: 'WSH-2026-000147',
-    childName: 'Kinley Wangchuk',
-    items: 'October fees · Extended time',
-    amount: 1000,
-    due: '15 Oct',
-    status: 'due',
-  },
-  {
-    no: 'WSH-2026-000131',
-    childName: 'Dechen Yangzom',
-    items: 'September fees · Monthly tuition',
-    amount: 6000,
-    due: '15 Sep',
-    status: 'overdue',
-  },
-]
+export const INVOICES: InvoiceRow[] = []
 
-export const ELDS_REVIEW: EldsReviewRow[] = [
-  {
-    childId: 'c3',
-    childName: 'Pema Dorji',
-    indicator: 'Follows two-step instructions',
-    rating: 'ap',
-    remark: 'Did this during tidy-up without reminders',
-    by: 'Sonam Y.',
-  },
-  {
-    childId: 'c4',
-    childName: 'Yeshi Lhamo',
-    indicator: 'Takes turns with help',
-    rating: 'bl',
-    remark: 'Getting there with the slide',
-    by: 'Sonam Y.',
-  },
-  {
-    childId: 'c5',
-    childName: 'Jigme Namgyel',
-    indicator: 'Sorts objects by colour',
-    rating: 'ap',
-    remark: '',
-    by: 'Sonam Y.',
-  },
-  {
-    childId: 'c7',
-    childName: 'Sonam Choden',
-    indicator: 'Joins in familiar rhymes',
-    rating: 'nya',
-    remark: 'Watches closely; not joining yet',
-    by: 'Sonam Y.',
-  },
-]
+export const ELDS_REVIEW: EldsReviewRow[] = []
 
 export const ADMISSION_STEPS = [
   'Child',

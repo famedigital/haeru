@@ -110,17 +110,18 @@ export function DailyReflection({ caregiver = false }: { caregiver?: boolean }) 
       ) : (
         <GlassCard
           padding="md"
-          className="flex flex-col sm:flex-row items-start sm:items-center gap-4 !border-amber-400/30"
+          className="flex flex-col sm:flex-row items-start sm:items-center gap-4"
         >
           <div className="flex-1">
-            <b className="text-amber-700 dark:text-amber-200">
-              October fees · {formatNu(1000)} due 15 Oct
-            </b>
+            <b className="text-slate-900 dark:text-white">Fees</b>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Pay by mBoB or bank transfer, then report the journal number in the app
+              No open invoice right now. When the centre issues fees, they appear here and under
+              Payments ({formatNu(0)} due).
             </p>
           </div>
-          <GlassButton onClick={() => setScreen('payments')}>Pay now</GlassButton>
+          <GlassButton variant="soft" onClick={() => setScreen('payments')}>
+            Payments
+          </GlassButton>
         </GlassCard>
       )}
 

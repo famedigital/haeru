@@ -9,12 +9,6 @@ import { EmvQr } from '../pay/EmvQr'
 import { GlassBadge, GlassButton, GlassCard } from '../ui'
 import { PageHeader } from '../shared/PageHeader'
 
-const INVOICES = [
-  ['WSH-2026-000147', 'October fees · Extended time', 1000, 'due'],
-  ['WSH-2026-000121', 'September fees · Extended time', 1000, 'paid'],
-  ['WSH-2026-000101', 'Tuition · installment 3 of 3', 19400, 'paid'],
-]
-
 type Centre = {
   name: string
   bank: string
@@ -24,12 +18,12 @@ type Centre = {
 }
 
 export function PaymentReporter() {
-  const { showToast } = useAppStore()
+  const { showToast, selectedChildId } = useAppStore()
   const [journal, setJournal] = useState('')
   const [method, setMethod] = useState<'mBoB' | 'mPay'>('mBoB')
   const [centre, setCentre] = useState<Centre | null>(null)
-  const amount = 1000
-  const invoiceNo = 'WSH-2026-000147'
+  const [childName, setChildName] = useState('Child')
+  const amount = 0
 
   useEffect(() => {
     void apiFetch<Centre>('/centre', { auth: false }).then((r) => {
@@ -37,15 +31,24 @@ export function PaymentReporter() {
     })
   }, [])
 
+  useEffect(() => {
+    if (!selectedChildId) return
+    void apiFetch<{ name?: string }>(`/children/${encodeURIComponent(selectedChildId)}`).then(
+      (r) => {
+        if (r.ok && r.data?.name) setChildName(r.data.name)
+      },
+    )
+  }, [selectedChildId])
+
   const bank = (centre?.bank as CentreBank) || 'bob'
   const payload = useMemo(() => {
-    if (!centre?.emvStatic) return ''
-    return buildDynamicEmv(centre.emvStatic, amount, invoiceNo.slice(0, 25))
-  }, [centre?.emvStatic, amount, invoiceNo])
+    if (!centre?.emvStatic || amount <= 0) return ''
+    return buildDynamicEmv(centre.emvStatic, amount, `haeru-${selectedChildId.slice(0, 8)}`)
+  }, [centre?.emvStatic, amount, selectedChildId])
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Payments" subtitle="Kinley · Academic year 2026" />
+      <PageHeader title="Payments" subtitle={`${childName} · live fee ledger`} />
 
       <div className="grid lg:grid-cols-[1.4fr_1fr] gap-5">
         <div className="space-y-5">
@@ -53,7 +56,8 @@ export function PaymentReporter() {
             <span className="text-xs text-slate-500 dark:text-slate-400">Amount due</span>
             <div className="display text-3xl text-slate-900 dark:text-white">{formatNu(amount)}</div>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              October fees · Extended time · due 15 Oct 2026 · {invoiceNo}
+              No open invoices for this child yet. When the centre issues fees, the amount and QR
+              appear here.
             </p>
             <div className="grid sm:grid-cols-2 gap-3 pt-2">
               <label className="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 flex flex-col">
@@ -79,13 +83,17 @@ export function PaymentReporter() {
             </div>
             <GlassButton
               onClick={() => {
+                if (amount <= 0) {
+                  showToast('No invoice due right now')
+                  return
+                }
                 if (!journal.trim()) {
                   showToast('Please enter your journal number')
                   return
                 }
                 const res = postPaymentReport({
-                  invoiceId: invoiceNo,
-                  parentId: 'parent-deki',
+                  invoiceId: `pending-${selectedChildId}`,
+                  parentId: 'parent',
                   amount,
                   method,
                   journalNo: journal.trim(),
@@ -101,32 +109,11 @@ export function PaymentReporter() {
             </GlassButton>
           </GlassCard>
 
-          <GlassCard padding="none">
-            <div className="p-5 border-b border-white/10">
-              <h2 className="text-lg text-slate-900 dark:text-white">Invoices & receipts</h2>
-            </div>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 text-left">
-                  <th className="px-5 py-3">Invoice</th>
-                  <th className="px-5 py-3">Items</th>
-                  <th className="px-5 py-3 text-right">Amount</th>
-                  <th className="px-5 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {INVOICES.map(([no, items, amt, st]) => (
-                  <tr key={String(no)} className="border-t border-white/5">
-                    <td className="px-5 py-3 text-slate-900 dark:text-white font-bold">{no}</td>
-                    <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{items}</td>
-                    <td className="px-5 py-3 text-right">{formatNu(Number(amt))}</td>
-                    <td className="px-5 py-3">
-                      <GlassBadge tone={st === 'due' ? 'bl' : 'ap'}>{st}</GlassBadge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <GlassCard padding="lg">
+            <h2 className="text-lg text-slate-900 dark:text-white">Invoices & receipts</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
+              No invoices yet for {childName}. Dummy fee rows have been removed.
+            </p>
           </GlassCard>
         </div>
 
@@ -138,23 +125,18 @@ export function PaymentReporter() {
           {payload ? (
             <EmvQr payload={payload} size="lg" />
           ) : (
-            <div className="aspect-square rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-white/10 flex items-center justify-center text-xs text-slate-500 dark:text-slate-400 text-center p-4">
-              Director has not uploaded a centre bank QR yet
-            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              QR appears when there is an amount due and the centre bank EMV is configured.
+            </p>
           )}
-          <p className="text-xs text-slate-600 dark:text-slate-300">
-            <b className="text-slate-900 dark:text-white">
-              {centre?.payeeName || "Wangchuk's School of Heroes"}
-            </b>
-            <br />
-            {CENTRE_BANK_META[bank].name}
-            <br />
-            A/c {centre?.accountNo || '—'}
-          </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Dynamic QR embeds {formatNu(amount)} + invoice {invoiceNo}. Put Kinley&apos;s name in
-            remarks if your bank app asks.
-          </p>
+          {centre ? (
+            <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+              <div>{centre.payeeName || centre.name}</div>
+              <div>
+                {CENTRE_BANK_META[bank].label} · {centre.accountNo || 'Account pending'}
+              </div>
+            </div>
+          ) : null}
         </GlassCard>
       </div>
     </div>
