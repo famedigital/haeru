@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   ELDS_DOMAINS,
   ELDS_MOTTO,
   KINLEY_RADAR_SERIES,
   OBSERVATION_WINDOWS,
 } from '../../lib/elds/domains'
-import { GlassCard, GlassChips, RadarChart3D } from '../ui'
+import { GlassBadge, GlassCard, GlassChips, RadarChart3D } from '../ui'
 
 const DOMAIN_COUNTS = [
   { ap: 12, bl: 4, nya: 1 },
@@ -16,16 +16,36 @@ const DOMAIN_COUNTS = [
   { ap: 9, bl: 3, nya: 0 },
 ]
 
+function matchDomainIndex(label: string): number {
+  const n = label.toLowerCase()
+  return ELDS_DOMAINS.findIndex((d) => {
+    const dd = d.toLowerCase()
+    return n.includes(dd) || dd.includes(n) || n.replace(/&/g, 'and') === dd.replace(/&/g, 'and')
+  })
+}
+
 interface ChildProgressPanelProps {
   childFirstName: string
   staff?: boolean
+  /** Confirmed Haeru Voice AI domain labels (e.g. "Approaches to Learning") */
+  liveDomainHits?: string[]
 }
 
 export function ChildProgressPanel({
   childFirstName,
   staff = false,
+  liveDomainHits = [],
 }: ChildProgressPanelProps) {
   const [win, setWin] = useState(2)
+
+  const hitCounts = useMemo(() => {
+    const counts = Array.from({ length: ELDS_DOMAINS.length }, () => 0)
+    for (const label of liveDomainHits) {
+      const i = matchDomainIndex(label)
+      if (i >= 0) counts[i]! += 1
+    }
+    return counts
+  }, [liveDomainHits])
 
   return (
     <div className="grid lg:grid-cols-[1.15fr_1fr] gap-5">
@@ -34,6 +54,12 @@ export function ChildProgressPanel({
         <div className="obsidian-pill rounded-xl px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
           {ELDS_MOTTO} Observations are confirmed by the Centre Director before families see them.
         </div>
+        {liveDomainHits.length > 0 ? (
+          <div className="obsidian-pill rounded-xl px-4 py-3 text-xs text-teal-800 dark:text-teal-200 border border-teal-400/30">
+            Haeru Voice AI added <b>{liveDomainHits.length}</b> confirmed observation
+            {liveDomainHits.length === 1 ? '' : 's'} for {childFirstName} — domains below are marked.
+          </div>
+        ) : null}
       </div>
 
       <GlassCard padding="lg" className="space-y-4">
@@ -44,12 +70,20 @@ export function ChildProgressPanel({
 
         <div className="space-y-3">
           {ELDS_DOMAINS.map((d, i) => {
-            const { ap, bl, nya } = DOMAIN_COUNTS[i]!
+            const base = DOMAIN_COUNTS[i]!
+            const boost = hitCounts[i] ?? 0
+            const ap = base.ap + boost
+            const { bl, nya } = base
             const t = ap + bl + nya
             return (
               <div key={d} className="space-y-1.5">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <b className="text-slate-700 dark:text-slate-200 min-w-[140px]">{d}</b>
+                  <b className="text-slate-700 dark:text-slate-200 min-w-[140px] flex items-center gap-2">
+                    {d}
+                    {boost > 0 ? (
+                      <GlassBadge tone="ap">+{boost} Voice AI</GlassBadge>
+                    ) : null}
+                  </b>
                   <span className="text-slate-500 dark:text-slate-400">
                     {ap} of {t} achieved
                   </span>

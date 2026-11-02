@@ -6,6 +6,7 @@ import {
 } from '../../lib/api/pulseApiServer'
 import { useAppStore } from '../../lib/store/appStore'
 import { GlassBadge, GlassButton, GlassCard, GlassTabs } from '../ui'
+import { ChildDailyLog, useChildLiveMoments } from './ChildDailyLog'
 import { ChildProgressPanel } from './ChildProgressPanel'
 
 
@@ -95,12 +96,16 @@ export function ChildProfile360() {
     CHILDREN.find((c) => c.id === selectedChildId) ??
     CHILDREN.find((c) => c.id === 'c1') ??
     CHILDREN[0]!
+  const liveChildId = selectedChildId || child.id
+  const { moments: liveMoments } = useChildLiveMoments(liveChildId)
+  const liveName = liveMoments[0]?.childName || child.name
   const room = ROOMS[child.room]
-  const first = childFirstName(child.name)
+  const first = childFirstName(liveName)
   const canSeeFees = role === 'owner' || role === 'parent'
   const tabs = canSeeFees
-    ? ['Overview', 'Progress', 'Family', 'Fees', 'Photos']
-    : ['Overview', 'Progress', 'Family', 'Photos']
+    ? ['Overview', 'Daily log', 'Progress', 'Family', 'Fees', 'Photos']
+    : ['Overview', 'Daily log', 'Progress', 'Family', 'Photos']
+  const liveDomains = liveMoments.map((m) => m.domain)
 
   const backLabel =
     role === 'facilitator' ? 'My children' : role === 'parent' || role === 'caregiver' ? 'Home' : 'Children'
@@ -135,7 +140,7 @@ export function ChildProfile360() {
             .slice(0, 2)}
         </span>
         <div className="flex-1 min-w-0 space-y-2">
-          <h1 className="text-2xl md:text-3xl text-slate-900 dark:text-white">{child.name}</h1>
+          <h1 className="text-2xl md:text-3xl text-slate-900 dark:text-white">{liveName}</h1>
           <div className="flex flex-wrap gap-2">
             <span
               className="text-xs font-bold px-2.5 py-1 rounded-full text-slate-900"
@@ -168,9 +173,14 @@ export function ChildProfile360() {
 
       <GlassTabs items={tabs} value={tab} onChange={setTab} />
 
+      {tabs[tab] === 'Daily log' && (
+        <ChildDailyLog childId={liveChildId} firstName={first} />
+      )}
+
       {tabs[tab] === 'Overview' && (
         <div className="grid lg:grid-cols-[2fr_1fr] gap-5">
           <div className="space-y-5">
+            <ChildDailyLog childId={liveChildId} firstName={first} />
             <GlassCard padding="lg">
               <h2 className="text-lg text-slate-900 dark:text-white mb-4">Care & medical</h2>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -256,6 +266,7 @@ export function ChildProfile360() {
         <ChildProgressPanel
           childFirstName={first}
           staff={role === 'owner' || role === 'facilitator'}
+          liveDomainHits={liveDomains}
         />
       )}
 
@@ -347,7 +358,7 @@ export function ChildProfile360() {
       )}
 
       {tabs[tab] === 'Photos' && (
-        <ChildPhotosGrid childId={child.id} firstName={first} />
+        <ChildPhotosGrid childId={liveChildId} firstName={first} />
       )}
     </div>
   )
