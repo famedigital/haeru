@@ -239,7 +239,6 @@ export function LandingPage() {
   const [persona, setPersona] = useState<PersonaKey>('owner')
   const [faqOpen, setFaqOpen] = useState<number | null>(0)
 
-  const exploreDemo = () => setRole('owner')
   const signIn = () => setRole('signin')
 
   return (
@@ -289,8 +288,8 @@ export function LandingPage() {
             <GlassButton variant="ghost" className="!hidden sm:!inline-flex !text-xs !py-2" onClick={signIn}>
               Sign in
             </GlassButton>
-            <GlassButton className="!text-xs !py-2" onClick={exploreDemo}>
-              Explore Demo
+            <GlassButton className="!text-xs !py-2" onClick={signIn}>
+              Sign in to centre
             </GlassButton>
             <button
               type="button"
@@ -352,8 +351,8 @@ export function LandingPage() {
           developmental milestone tracking.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <GlassButton onClick={exploreDemo}>
-            Explore Live Portals <ArrowRight className="w-4 h-4" />
+          <GlassButton onClick={signIn}>
+            Sign in to your centre <ArrowRight className="w-4 h-4" />
           </GlassButton>
           <GlassButton
             variant="soft"
@@ -519,8 +518,8 @@ export function LandingPage() {
             ))}
           </ul>
           <div className="flex flex-wrap gap-3 pt-2">
-            <GlassButton onClick={() => setRole(PERSONAS[persona].demoRole)}>
-              Open {persona} demo <ArrowRight className="w-4 h-4" />
+            <GlassButton onClick={signIn}>
+              Sign in as {persona} <ArrowRight className="w-4 h-4" />
             </GlassButton>
             <GlassBadge tone="ap">Child privacy enforced</GlassBadge>
           </div>
@@ -701,8 +700,8 @@ export function LandingPage() {
             delighted families. Wangchuk&apos;s School of Heroes runs on Haeru today.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <GlassButton onClick={exploreDemo}>
-              Launch Interactive Demo <ArrowRight className="w-4 h-4" />
+            <GlassButton onClick={signIn}>
+              Sign in to Haeru <ArrowRight className="w-4 h-4" />
             </GlassButton>
             <GlassButton
               variant="soft"
@@ -736,12 +735,12 @@ export function LandingPage() {
                   ['Caregiver View', 'caregiver'],
                   ['Superadmin Console', 'superadmin'],
                 ] as const
-              ).map(([label, role]) => (
+              ).map(([label]) => (
                 <li key={label}>
                   <button
                     type="button"
                     className="hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
-                    onClick={() => setRole(role)}
+                    onClick={signIn}
                   >
                     {label}
                   </button>

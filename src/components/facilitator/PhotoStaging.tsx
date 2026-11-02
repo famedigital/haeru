@@ -35,7 +35,7 @@ const DEMO_MEDIA = [
 const ROSTER = CHILDREN.map((c) => ({ id: c.id, name: c.name }))
 
 export function PhotoStaging() {
-  const { showToast, setRole, setScreen } = useAppStore()
+  const { showToast } = useAppStore()
   const [mediaIdx, setMediaIdx] = useState(0)
   const [caption, setCaption] = useState(
     '@Kinley @Pema Rainbow hands today — mixing colours to make green.',
@@ -102,8 +102,6 @@ export function PhotoStaging() {
     showToast(
       `${created} child post(s) queued · same Cloudinary photo · Director must confirm`,
     )
-    setRole('owner')
-    setScreen('confirm')
   }
 
   return (
@@ -116,7 +114,7 @@ export function PhotoStaging() {
       <GlassCard padding="lg" className="space-y-4 relative overflow-hidden">
         <GlassBadge tone="violet">Hermes · Cloudinary · Director gate</GlassBadge>
         <h2 className="text-xl text-slate-900 dark:text-white flex items-center gap-2">
-          <Camera className="w-5 h-5 text-emerald-500" /> Simulate Telegram photo
+          <Camera className="w-5 h-5 text-emerald-500" /> Stage classroom photo
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-300 max-w-xl">
           Caption with <code className="text-emerald-700 dark:text-emerald-300">@Kinley</code>{' '}

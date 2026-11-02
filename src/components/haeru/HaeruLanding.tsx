@@ -79,7 +79,7 @@ export default function HaeruLanding() {
             <button
               key={tile.persona}
               type="button"
-              onClick={() => setRole(tile.role)}
+              onClick={() => setRole('signin')}
               className="text-left group"
             >
               <GlassCard
@@ -96,8 +96,16 @@ export default function HaeruLanding() {
           ))}
         </div>
 
+        <button
+          type="button"
+          onClick={() => setRole('signin')}
+          className="mt-8 relative z-10 text-sm font-bold text-teal-700 dark:text-teal-300 hover:underline"
+        >
+          Sign in to continue →
+        </button>
+
         <p className="mt-12 text-xs text-slate-400 dark:text-slate-500 relative z-10">
-          Haeru · Demo centre Wangchuk&apos;s School of Heroes · Babesa, Thimphu
+          Haeru · Wangchuk&apos;s School of Heroes · Babesa, Thimphu
         </p>
       </div>
     </div>

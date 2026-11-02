@@ -277,7 +277,12 @@ export async function loginUser(body: unknown) {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role as 'owner' | 'facilitator' | 'parent' | 'caregiver',
+      role: user.role as
+        | 'superadmin'
+        | 'owner'
+        | 'facilitator'
+        | 'parent'
+        | 'caregiver',
       room: user.room,
       childIds,
       token: `uat-${user.id}`,

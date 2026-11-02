@@ -51,9 +51,38 @@ function readInitialTheme(): Theme {
   return saved === 'light' ? 'light' : 'dark'
 }
 
+const APP_ROLES = new Set<Role>([
+  'superadmin',
+  'owner',
+  'facilitator',
+  'parent',
+  'caregiver',
+])
+
+function readSessionRole(): Role | null {
+  if (typeof window === 'undefined') return null
+  // Production: never restore a role without a login session
+  if (!import.meta.env.DEV) {
+    try {
+      const raw = localStorage.getItem('wsh_uat_session')
+      if (!raw) return null
+      const parsed = JSON.parse(raw) as { role?: Role }
+      if (parsed.role && APP_ROLES.has(parsed.role)) return parsed.role
+    } catch {
+      return null
+    }
+    return null
+  }
+  return null
+}
+
 export function AppStoreProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleState] = useState<Role>('landing')
-  const [screen, setScreenState] = useState('landing')
+  const [role, setRoleState] = useState<Role>(() => readSessionRole() ?? 'landing')
+  const [screen, setScreenState] = useState(() => {
+    const r = readSessionRole()
+    if (r && r !== 'landing' && r !== 'signin') return ROLE_CONFIGS[r].home
+    return 'landing'
+  })
   const [roomFilter, setRoomFilter] = useState<RoomId | 'all'>('all')
   const [selectedChildId, setSelectedChildId] = useState(PARENT_CHILD_ID)
   const [toast, setToast] = useState<string | null>(null)
@@ -76,8 +105,33 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setRole = useCallback((next: Role) => {
+    // Production: block persona hopping into app roles without a session
+    if (
+      !import.meta.env.DEV &&
+      APP_ROLES.has(next) &&
+      typeof window !== 'undefined'
+    ) {
+      try {
+        const raw = localStorage.getItem('wsh_uat_session')
+        const parsed = raw ? (JSON.parse(raw) as { role?: Role }) : null
+        if (!parsed?.role || parsed.role !== next) {
+          setRoleState('signin')
+          setScreenState('unlock')
+          return
+        }
+      } catch {
+        setRoleState('signin')
+        setScreenState('unlock')
+        return
+      }
+    }
     setRoleState(next)
     if (next === 'signin' || next === 'landing') {
+      try {
+        localStorage.removeItem('wsh_uat_session')
+      } catch {
+        /* ignore */
+      }
       setScreenState(next === 'landing' ? 'landing' : 'unlock')
       setIsImpersonating(false)
       setImpersonationReason(null)

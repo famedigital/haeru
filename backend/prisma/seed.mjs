@@ -1,10 +1,21 @@
 /**
- * Seed WSH centre + demo role users for UAT.
- * Run: node backend/prisma/seed.mjs  (after prisma db push / migrate)
+ * Seed WSH centre + pilot role users.
+ * Passwords from env (Coolify / .env) — never commit real values.
+ * Run: node backend/prisma/seed.mjs  (after prisma db push)
  */
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
+
+function pass(key) {
+  const v = process.env[key]?.trim()
+  if (!v) {
+    throw new Error(
+      `[seed] Missing ${key}. Set SEED_PASSWORD_* in Coolify env (see .credentials.pilot).`,
+    )
+  }
+  return v
+}
 
 async function main() {
   function tlv(tag, value) {
@@ -66,63 +77,72 @@ async function main() {
 
   const users = [
     {
-      email: 'owner@wsh.bt',
+      email: 'superadmin@haeru.bt',
+      phone: '17000000',
+      name: 'Haeru Ops',
+      role: 'superadmin',
+      password: pass('SEED_PASSWORD_SUPERADMIN'),
+    },
+    {
+      email: 'director@wsh.bt',
       phone: '17000001',
       name: 'Choki Wangmo',
       role: 'owner',
-      password: 'owner123',
-      pairingToken: 'pair_wsh_choki_demo',
+      password: pass('SEED_PASSWORD_OWNER'),
+      pairingToken: 'pair_wsh_choki',
     },
     {
       email: 'facilitator@wsh.bt',
       phone: '17000002',
       name: 'Sonam Yangden',
       role: 'facilitator',
-      password: 'facil123',
+      password: pass('SEED_PASSWORD_FACILITATOR'),
       room: 'kg',
-      pairingToken: 'pair_wsh_sonam_demo',
+      pairingToken: 'pair_wsh_sonam',
     },
     {
       email: 'parent@wsh.bt',
       phone: '17111111',
       name: 'Deki Choden',
       role: 'parent',
-      password: 'parent123',
-      pairingToken: 'pair_wsh_deki_demo',
+      password: pass('SEED_PASSWORD_PARENT'),
+      pairingToken: 'pair_wsh_deki',
     },
     {
       email: 'caregiver@wsh.bt',
       phone: '77112233',
       name: 'Dawa Zam',
       role: 'caregiver',
-      password: 'care123',
+      password: pass('SEED_PASSWORD_CAREGIVER'),
     },
   ]
 
   for (const u of users) {
-    await prisma.user.upsert({
-      where: { phone: u.phone },
-      update: {
-        name: u.name,
-        role: u.role,
-        email: u.email,
-        password: u.password,
-        room: u.room ?? null,
-        centreId: centre.id,
-        pairingToken: u.pairingToken ?? null,
-      },
-      create: {
-        name: u.name,
-        role: u.role,
-        email: u.email,
-        phone: u.phone,
-        password: u.password,
-        room: u.room ?? null,
-        centreId: centre.id,
-        pairingToken: u.pairingToken ?? null,
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [{ phone: u.phone }, { email: u.email }, ...(u.role === 'owner' ? [{ email: 'owner@wsh.bt' }] : [])],
       },
     })
+    const data = {
+      name: u.name,
+      role: u.role,
+      email: u.email,
+      phone: u.phone,
+      password: u.password,
+      room: u.room ?? null,
+      centreId: centre.id,
+      pairingToken: u.pairingToken ?? null,
+    }
+    if (existing) {
+      await prisma.user.update({ where: { id: existing.id }, data })
+    } else {
+      await prisma.user.create({ data })
+    }
   }
+
+  await prisma.user.deleteMany({
+    where: { email: 'owner@wsh.bt' },
+  })
 
   const kinley = await prisma.child.upsert({
     where: { code: 'WSH-24-018' },
@@ -141,7 +161,7 @@ async function main() {
     },
   })
 
-  const parent = await prisma.user.findUnique({ where: { phone: '17123456' } })
+  const parent = await prisma.user.findUnique({ where: { phone: '17111111' } })
   const caregiver = await prisma.user.findUnique({ where: { phone: '77112233' } })
   if (parent) {
     const existing = await prisma.childGuardian.findFirst({
@@ -178,7 +198,11 @@ async function main() {
     }
   }
 
-  console.log('Seed OK', { centre: centre.code, child: kinley.code })
+  console.log('Seed OK', {
+    centre: centre.code,
+    child: kinley.code,
+    users: users.map((u) => u.email),
+  })
 }
 
 main()

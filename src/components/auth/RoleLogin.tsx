@@ -11,18 +11,6 @@ import { GlassButton, GlassCard } from '../ui'
 
 type AuthRole = Exclude<Role, 'signin' | 'landing'>
 
-const PRESETS: Array<{
-  role: AuthRole
-  email: string
-  password: string
-  label: string
-}> = [
-  { role: 'owner', email: 'owner@wsh.bt', password: 'owner123', label: 'Owner' },
-  { role: 'facilitator', email: 'facilitator@wsh.bt', password: 'facil123', label: 'Facilitator' },
-  { role: 'parent', email: 'parent@wsh.bt', password: 'parent123', label: 'Parent' },
-  { role: 'caregiver', email: 'caregiver@wsh.bt', password: 'care123', label: 'Caregiver' },
-]
-
 const CAROUSEL_SLIDES = [
   {
     tag: 'THE GUARDIAN PRINCIPLE',
@@ -214,13 +202,15 @@ export function RoleLogin() {
       }
       const nextRole = r.data.role
       const home =
-        nextRole === 'owner'
-          ? 'centres'
-          : nextRole === 'facilitator'
-            ? 'ftoday'
-            : nextRole === 'caregiver'
-              ? 'chome'
-              : 'phome'
+        nextRole === 'superadmin'
+          ? 'super_overview'
+          : nextRole === 'owner'
+            ? 'centres'
+            : nextRole === 'facilitator'
+              ? 'ftoday'
+              : nextRole === 'caregiver'
+                ? 'chome'
+                : 'phome'
       setRole(nextRole)
       if (r.data.childIds[0]) {
         openChild(r.data.childIds[0])
@@ -228,7 +218,7 @@ export function RoleLogin() {
       setScreen(home)
       showToast(`Welcome, ${r.data.name}`)
     } catch {
-      showToast('Network error · is the Vite API running?')
+      showToast('Network error · try again or check API')
     } finally {
       setBusy(false)
     }
@@ -268,7 +258,7 @@ export function RoleLogin() {
                 Sign in to your centre — care, ELDS, and families, child-scoped.
               </p>
               <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                Demo centre · Wangchuk&apos;s School of Heroes
+                Wangchuk&apos;s School of Heroes · Babesa, Thimphu
               </p>
             </div>
           </header>
@@ -327,30 +317,6 @@ export function RoleLogin() {
             </form>
           </GlassCard>
 
-          {import.meta.env.DEV && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 text-center">
-                DEV quick unlock
-              </p>
-              <div className="flex flex-wrap justify-center gap-1.5">
-                {PRESETS.map((p) => (
-                  <button
-                    key={p.role}
-                    type="button"
-                    disabled={busy}
-                    onClick={() => {
-                      setEmail(p.email)
-                      setPassword(p.password)
-                      void login(p.email, p.password)
-                    }}
-                    className="text-[11px] font-bold px-2 py-1 rounded-lg border border-slate-200/70 dark:border-white/15 text-slate-700 dark:text-slate-200 hover:bg-white/50 dark:hover:bg-white/5"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </section>
 

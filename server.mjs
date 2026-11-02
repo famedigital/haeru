@@ -33,6 +33,16 @@ async function boot() {
     console.error('[haeru] prisma db push failed', push.stderr || push.stdout)
   } else {
     console.log('[haeru] prisma schema synced')
+    const seed = spawnSync('node', ['backend/prisma/seed.mjs'], {
+      cwd: __dirname,
+      env: process.env,
+      encoding: 'utf8',
+    })
+    if (seed.status !== 0) {
+      console.error('[haeru] seed failed', seed.stderr || seed.stdout)
+    } else {
+      console.log('[haeru] seed ok', (seed.stdout || '').trim())
+    }
   }
 
   const webhookMod = await import(

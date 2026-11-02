@@ -129,7 +129,7 @@ function ShellInner() {
     return (
       <>
         {role === 'landing' ? <LandingPage /> : <RoleLogin />}
-        <PersonaSwitcher />
+        {import.meta.env.DEV ? <PersonaSwitcher /> : null}
         <ToastContainer />
       </>
     )
@@ -145,7 +145,7 @@ function ShellInner() {
           <ScreenRouter />
         </main>
       </div>
-      <PersonaSwitcher />
+      {import.meta.env.DEV ? <PersonaSwitcher /> : null}
       <ToastContainer />
     </div>
   )

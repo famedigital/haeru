@@ -1,67 +1,69 @@
-/* Haeru character motion — original soft guardian companion (not religious iconography) */
+/* Haeru — 3D luminous chromatic companion (Octocat-inspired) */
 
 :root {
-  --haeru-rainbow-violet: #e9d5ff;
-  --haeru-rainbow-rose: #fbcfe8;
-  --haeru-rainbow-gold: #fef08a;
-  --haeru-rainbow-teal: #a7f3d0;
-  --haeru-rainbow-azure: #bae6fd;
-  --haeru-rainbow-cream: #fffbeb;
-  --haeru-wing-dawn: #fed7aa;
-  --haeru-wing-sky: #a5f3fc;
-  --haeru-blush-rose: #fb7185;
-  --haeru-iris: #0d9488;
-  --haeru-pupil: #134e4a;
-  --haeru-eye-white: #ffffff;
-  --haeru-eye-sparkle: #ffffff;
-  --haeru-mouth: #0d9488;
-  --haeru-glow: #f472b6;
+  --haeru-hood: #181326;
+  --haeru-ear-recess: #100d1c;
+  --haeru-face-rose: #ffb3d1;
+  --haeru-face-peach: #fed7aa;
+  --haeru-face-coral: #ff6548;
+  --haeru-cheek: #ff4d4d;
+  --haeru-eye-top: #191038;
+  --haeru-eye-bot: #4a2e85;
+  --haeru-nose: #201535;
+  --haeru-mouth: #221738;
 }
 
-html[data-theme='dark'] {
-  --haeru-pupil: #042f2e;
-}
-
-html[data-theme='dark'] .haeru-glow {
-  opacity: 0.65;
-}
-
-@keyframes haeru-float {
-  0%,
-  100% {
-    transform: translateY(0px);
+/* Dynamic chromatic flow through Haeru's luminous face */
+@keyframes haeru-chroma-wave {
+  0% {
+    filter: hue-rotate(0deg) saturate(1.1);
+    transform: scale(1);
+  }
+  25% {
+    filter: hue-rotate(30deg) saturate(1.2);
+    transform: scale(1.015);
   }
   50% {
-    transform: translateY(-8px);
+    filter: hue-rotate(60deg) saturate(1.05);
+    transform: scale(1);
+  }
+  75% {
+    filter: hue-rotate(30deg) saturate(1.2);
+    transform: scale(1.015);
+  }
+  100% {
+    filter: hue-rotate(0deg) saturate(1.1);
+    transform: scale(1);
   }
 }
 
-@keyframes haeru-breathe {
+.haeru-chroma-face {
+  animation: haeru-chroma-wave 8s ease-in-out infinite;
+  transform-origin: 100px 115px;
+}
+
+/* Heartbeat breathing pulse for cheeks */
+@keyframes haeru-cheek-pulse {
   0%,
   100% {
-    transform: scaleY(1) scaleX(1);
+    opacity: 0.75;
+    transform: scale(1);
   }
   50% {
-    transform: scaleY(1.025) scaleX(0.985);
+    opacity: 0.95;
+    transform: scale(1.04);
   }
 }
 
-@keyframes haeru-wing-flutter {
-  0%,
-  100% {
-    transform: rotate(0deg) translateY(0px);
-  }
-  30% {
-    transform: rotate(-6deg) translateY(-4px);
-  }
-  70% {
-    transform: rotate(4deg) translateY(-2px);
-  }
+.haeru-cheek-glow {
+  animation: haeru-cheek-pulse 3.5s ease-in-out infinite;
+  transform-origin: 100px 145px;
 }
 
-@keyframes haeru-blink {
+/* Subtle, expressive kawaii blinking */
+@keyframes haeru-kawaii-blink {
   0%,
-  90%,
+  92%,
   100% {
     transform: scaleY(1);
   }
@@ -70,49 +72,55 @@ html[data-theme='dark'] .haeru-glow {
   }
 }
 
-@keyframes haeru-glow-pulse {
+.haeru-eye-left,
+.haeru-eye-right {
+  animation: haeru-kawaii-blink 5.5s ease-in-out infinite;
+}
+
+.haeru-eye-left {
+  transform-origin: 80px 115px;
+}
+
+.haeru-eye-right {
+  transform-origin: 120px 115px;
+  animation-delay: 0.08s;
+}
+
+/* Soft floating idle motion — translateY only (no 3D tilt) */
+@keyframes haeru-hover-float {
   0%,
   100% {
-    opacity: 0.28;
-    transform: scale(1);
+    transform: translateY(0);
   }
   50% {
-    opacity: 0.42;
-    transform: scale(1.08);
+    transform: translateY(-6px);
   }
 }
 
-@keyframes haeru-sparkle {
-  0% {
-    opacity: 0;
-    transform: translateY(0px) scale(0.5);
-  }
-  30% {
-    opacity: 1;
-    transform: translateY(-12px) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-28px) scale(0.3);
-  }
+.haeru-luminous-root {
+  animation: haeru-hover-float 4s ease-in-out infinite;
 }
 
 @keyframes haeru-bringing-bounce {
   0% {
-    transform: translateY(0px) scale(1);
+    transform: translateY(0) scale(1);
   }
   25% {
-    transform: translateY(-14px) scale(1.05);
+    transform: translateY(-12px) scale(1.04);
   }
   50% {
-    transform: translateY(0px) scale(0.97);
+    transform: translateY(0) scale(0.98);
   }
   75% {
-    transform: translateY(-6px) scale(1.02);
+    transform: translateY(-5px) scale(1.02);
   }
   100% {
-    transform: translateY(0px) scale(1);
+    transform: translateY(0) scale(1);
   }
+}
+
+.haeru-bringing {
+  animation: haeru-bringing-bounce 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes haeru-entrance {
@@ -126,124 +134,28 @@ html[data-theme='dark'] .haeru-glow {
   }
   100% {
     opacity: 1;
-    transform: translateY(0px) scale(1);
+    transform: translateY(0) scale(1);
   }
+}
+
+.haeru-entrance {
+  animation: haeru-entrance 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes haeru-pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgba(110, 231, 183, 0.55);
+    box-shadow: 0 0 0 0 rgba(255, 101, 72, 0.45);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(110, 231, 183, 0);
+    box-shadow: 0 0 0 8px rgba(255, 101, 72, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(110, 231, 183, 0);
+    box-shadow: 0 0 0 0 rgba(255, 101, 72, 0);
   }
 }
 
-@keyframes haeru-orbit {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.haeru-float {
-  animation: haeru-float 4s ease-in-out infinite;
-}
-.haeru-breathe {
-  animation: haeru-breathe 3.5s ease-in-out infinite;
-}
-.haeru-blink {
-  animation: haeru-blink 5s ease-in-out infinite;
-  transform-origin: center;
-}
-.haeru-glow {
-  animation: haeru-glow-pulse 3s ease-in-out infinite;
-  transform-origin: center;
-}
-.haeru-entrance {
-  animation: haeru-entrance 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-.haeru-bringing {
-  animation: haeru-bringing-bounce 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
 .haeru-pulse {
   animation: haeru-pulse-ring 1.8s ease-out infinite;
-}
-
-.haeru-wing-left {
-  animation: haeru-wing-flutter 3s ease-in-out infinite;
-  transform-origin: center right;
-}
-.haeru-wing-right {
-  animation: haeru-wing-flutter 3s ease-in-out infinite reverse;
-  transform-origin: center left;
-}
-
-.haeru-sparkle-1 {
-  animation: haeru-sparkle 2.4s ease-out infinite;
-  animation-delay: 0s;
-}
-.haeru-sparkle-2 {
-  animation: haeru-sparkle 2.4s ease-out infinite;
-  animation-delay: 0.8s;
-}
-.haeru-sparkle-3 {
-  animation: haeru-sparkle 2.4s ease-out infinite;
-  animation-delay: 1.6s;
-}
-
-/* Iridescent rainbow shimmer — soft, toddler-safe hue drift */
-@keyframes haeru-rainbow-shift {
-  0% {
-    filter: hue-rotate(0deg);
-  }
-  50% {
-    filter: hue-rotate(25deg);
-  }
-  100% {
-    filter: hue-rotate(0deg);
-  }
-}
-
-.haeru-rainbow-body {
-  animation: haeru-rainbow-shift 12s ease-in-out infinite;
-}
-
-/* Floating rainbow sparkle dots */
-.haeru-sparkle-pink {
-  fill: #f472b6;
-  animation: haeru-sparkle 2.2s ease-out infinite;
-}
-.haeru-sparkle-gold {
-  fill: #fbbf24;
-  animation: haeru-sparkle 2.5s ease-out infinite;
-  animation-delay: 0.7s;
-}
-.haeru-sparkle-azure {
-  fill: #38bdf8;
-  animation: haeru-sparkle 2.8s ease-out infinite;
-  animation-delay: 1.4s;
-}
-.haeru-sparkle-violet {
-  fill: #a855f7;
-  animation: haeru-sparkle 2.4s ease-out infinite;
-  animation-delay: 1.9s;
-}
-
-.haeru-orbit {
-  animation: haeru-orbit 14s linear infinite;
-  transform-origin: center;
-}
-.haeru-orbit-delay-1 {
-  animation-delay: -4s;
-}
-.haeru-orbit-delay-2 {
-  animation-delay: -8s;
 }
 
 /* Tactile squish on click */
@@ -256,13 +168,13 @@ html[data-theme='dark'] .haeru-glow {
     transform: scale(1, 1);
   }
   25% {
-    transform: scale(1.15, 0.85);
+    transform: scale(1.12, 0.88);
   }
   50% {
-    transform: scale(0.92, 1.1);
+    transform: scale(0.94, 1.08);
   }
   75% {
-    transform: scale(1.05, 0.96);
+    transform: scale(1.04, 0.97);
   }
   100% {
     transform: scale(1, 1);
@@ -280,16 +192,16 @@ html[data-theme='dark'] .haeru-glow {
     transform: rotate(0deg) scale(1);
   }
   20% {
-    transform: rotate(-8deg) scale(1.05);
+    transform: rotate(-6deg) scale(1.04);
   }
   40% {
-    transform: rotate(8deg) scale(1.05);
+    transform: rotate(6deg) scale(1.04);
   }
   60% {
-    transform: rotate(-5deg) scale(1.02);
+    transform: rotate(-4deg) scale(1.02);
   }
   80% {
-    transform: rotate(5deg) scale(1.02);
+    transform: rotate(4deg) scale(1.02);
   }
 }
 
@@ -328,7 +240,6 @@ html[data-theme='dark'] .haeru-glow {
 
 .haeru-zzz-1 {
   animation: haeru-zzz 2.5s ease-out infinite;
-  animation-delay: 0s;
 }
 .haeru-zzz-2 {
   animation: haeru-zzz 2.5s ease-out infinite;
@@ -381,24 +292,22 @@ html[data-theme='dark'] .haeru-glow {
   animation-delay: 2s;
 }
 
+/* Legacy class aliases kept for any external references */
+.haeru-float {
+  animation: haeru-hover-float 4s ease-in-out infinite;
+}
+.haeru-blink {
+  animation: haeru-kawaii-blink 5.5s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .haeru-float,
-  .haeru-breathe,
-  .haeru-blink,
-  .haeru-glow,
-  .haeru-wing-left,
-  .haeru-wing-right,
-  .haeru-sparkle-1,
-  .haeru-sparkle-2,
-  .haeru-sparkle-3,
-  .haeru-sparkle-pink,
-  .haeru-sparkle-gold,
-  .haeru-sparkle-azure,
-  .haeru-sparkle-violet,
-  .haeru-rainbow-body,
+  .haeru-luminous-root,
+  .haeru-chroma-face,
+  .haeru-cheek-glow,
+  .haeru-eye-left,
+  .haeru-eye-right,
   .haeru-bringing,
   .haeru-pulse,
-  .haeru-orbit,
   .haeru-squish,
   .haeru-wiggle,
   .haeru-particle,
@@ -407,7 +316,9 @@ html[data-theme='dark'] .haeru-glow {
   .haeru-zzz-3,
   .haeru-float-chip-1,
   .haeru-float-chip-2,
-  .haeru-float-chip-3 {
+  .haeru-float-chip-3,
+  .haeru-float,
+  .haeru-blink {
     animation: none !important;
   }
   .haeru-entrance {
