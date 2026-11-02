@@ -1,45 +1,39 @@
-/* Haeru — 3D luminous chromatic companion (Octocat-inspired) */
+/* Haeru — 3D luminous mascot: Rainbow Cloth + Pure Pink Face (GitHub-inspired) */
 
 :root {
-  --haeru-hood: #181326;
-  --haeru-ear-recess: #100d1c;
-  --haeru-face-rose: #ffb3d1;
-  --haeru-face-peach: #fed7aa;
-  --haeru-face-coral: #ff6548;
-  --haeru-cheek: #ff4d4d;
-  --haeru-eye-top: #191038;
-  --haeru-eye-bot: #4a2e85;
-  --haeru-nose: #201535;
-  --haeru-mouth: #221738;
+  --haeru-hood-indigo: #818cf8;
+  --haeru-hood-violet: #c084fc;
+  --haeru-hood-rose: #f472b6;
+  --haeru-hood-gold: #fbbf24;
+  --haeru-hood-cyan: #38bdf8;
+  --haeru-face-pink: #ffb8cf;
+  --haeru-face-blush: #ffa0b6;
+  --haeru-cheek: #ff3366;
+  --haeru-eye-top: #1a0f35;
+  --haeru-eye-bot: #4c2b8c;
+  --haeru-nose: #201138;
+  --haeru-mouth: #261545;
 }
 
-/* Dynamic chromatic flow through Haeru's luminous face */
-@keyframes haeru-chroma-wave {
-  0% {
-    filter: hue-rotate(0deg) saturate(1.1);
-    transform: scale(1);
-  }
-  25% {
-    filter: hue-rotate(30deg) saturate(1.2);
-    transform: scale(1.015);
+/* Soft fur shimmer — gentle, not disco potato */
+@keyframes haeru-cloth-rainbow-drift {
+  0%,
+  100% {
+    filter: hue-rotate(0deg) saturate(1.05) brightness(1);
   }
   50% {
-    filter: hue-rotate(60deg) saturate(1.05);
-    transform: scale(1);
-  }
-  75% {
-    filter: hue-rotate(30deg) saturate(1.2);
-    transform: scale(1.015);
-  }
-  100% {
-    filter: hue-rotate(0deg) saturate(1.1);
-    transform: scale(1);
+    filter: hue-rotate(18deg) saturate(1.12) brightness(1.04);
   }
 }
 
-.haeru-chroma-face {
-  animation: haeru-chroma-wave 8s ease-in-out infinite;
-  transform-origin: 100px 115px;
+.haeru-rainbow-cloth {
+  animation: haeru-cloth-rainbow-drift 8s ease-in-out infinite;
+  transform-origin: 100px 100px;
+}
+
+/* 2. FACE: Stays 100% pure baby pink like GitHub (no color rotation) */
+.haeru-pure-pink-face {
+  /* Constant glowing pink — zero hue-rotate */
 }
 
 /* Heartbeat breathing pulse for cheeks */

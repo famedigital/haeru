@@ -27,7 +27,10 @@ export interface HaeruCharacterProps {
   sleepy?: boolean
 }
 
-/** Ultra-cute 3D luminous chromatic Haeru — hooded kitten, Octocat-inspired. */
+/**
+ * Haeru — chibi guardian kitten (not a potato hoodie).
+ * Big round head · cream face · teal/violet soft suit · white sclera eyes.
+ */
 export default function HaeruCharacter({
   expression = 'happy',
   size = 200,
@@ -41,12 +44,13 @@ export default function HaeruCharacter({
   sleepy = false,
 }: HaeruCharacterProps) {
   const uid = useId().replace(/:/g, '')
-  const faceChroma = `haeru-face-chroma-${uid}`
-  const cheekBloom = `haeru-cheek-bloom-${uid}`
-  const eyeDepth = `haeru-eye-depth-${uid}`
-  const hoodDepth = `haeru-hood-depth-${uid}`
+  const fur = `haeru-fur-${uid}`
+  const face = `haeru-face-${uid}`
+  const earInner = `haeru-ear-inner-${uid}`
+  const iris = `haeru-iris-${uid}`
+  const cheek = `haeru-cheek-${uid}`
+  const softShadow = `haeru-soft-shadow-${uid}`
   const cheekBlur = `haeru-cheek-blur-${uid}`
-  const earBounce = `haeru-ear-bounce-${uid}`
 
   const aria =
     label ??
@@ -54,18 +58,18 @@ export default function HaeruCharacter({
       ? 'Haeru bringing a new moment from school'
       : 'Haeru, your school companion')
 
-  const bodyScale = expression === 'calm' || sleepy ? 0.97 : expression === 'bringing' ? 1.03 : 1
-  const eyeScale = expression === 'bringing' && !sleepy ? 1.08 : 1
+  const bodyScale = expression === 'calm' || sleepy ? 0.98 : expression === 'bringing' ? 1.02 : 1
+  const eyeScale = expression === 'bringing' && !sleepy ? 1.05 : 1
   const showCrescents = crescentEyes || sleepy
-  const blush = blushOpacity ?? 0.75
-  const pawLift = wingHover ? -3 : 0
+  const blush = blushOpacity ?? 0.7
+  const pawLift = wingHover ? -4 : 0
 
   const mouthPath =
     expression === 'bringing' && !sleepy
-      ? 'M 92 134 Q 97 141 100 138 Q 103 141 108 134'
+      ? 'M 90 118 Q 100 128 110 118'
       : sleepy || expression === 'calm'
-        ? 'M 95 136 Q 100 139 105 136'
-        : 'M 94 135 Q 97 138 100 136 Q 103 138 106 135'
+        ? 'M 94 120 Q 100 123 106 120'
+        : 'M 92 119 Q 96 124 100 121 Q 104 124 108 119'
 
   return (
     <svg
@@ -82,35 +86,43 @@ export default function HaeruCharacter({
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        <linearGradient id={faceChroma} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ffb3d1" className="haeru-stop-1" />
-          <stop offset="45%" stopColor="#fed7aa" className="haeru-stop-2" />
-          <stop offset="100%" stopColor="#ff6548" className="haeru-stop-3" />
+        {/* Soft teal–violet suit (subtle shimmer, not rainbow candy) */}
+        <linearGradient id={fur} x1="15%" y1="0%" x2="90%" y2="100%">
+          <stop offset="0%" stopColor="#5eead4" />
+          <stop offset="45%" stopColor="#67e8f9" />
+          <stop offset="100%" stopColor="#a78bfa" />
         </linearGradient>
 
-        <radialGradient id={cheekBloom} cx="50%" cy="80%" r="60%">
-          <stop offset="0%" stopColor="#ff4d4d" stopOpacity="0.85" />
-          <stop offset="60%" stopColor="#ff7a59" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#ff9980" stopOpacity="0" />
+        <radialGradient id={earInner} cx="40%" cy="55%" r="60%">
+          <stop offset="0%" stopColor="#fecdd3" />
+          <stop offset="100%" stopColor="#f9a8d4" stopOpacity="0.55" />
         </radialGradient>
 
-        <linearGradient id={eyeDepth} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#191038" />
-          <stop offset="60%" stopColor="#2e1b5c" />
-          <stop offset="100%" stopColor="#4a2e85" />
+        {/* Cream / peach face — warm, not hot-pink blob */}
+        <linearGradient id={face} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#fff7ed" />
+          <stop offset="55%" stopColor="#ffedd5" />
+          <stop offset="100%" stopColor="#fed7aa" />
         </linearGradient>
 
-        <radialGradient id={earBounce} cx="50%" cy="70%" r="55%">
-          <stop offset="0%" stopColor="#ffb3d1" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#181326" stopOpacity="0" />
+        <radialGradient id={iris} cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#7c3aed" />
+          <stop offset="55%" stopColor="#5b21b6" />
+          <stop offset="100%" stopColor="#1e1b4b" />
         </radialGradient>
 
-        <filter id={cheekBlur} x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="6" />
+        <radialGradient id={cheek} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fb7185" stopOpacity="0.75" />
+          <stop offset="70%" stopColor="#fb7185" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#fb7185" stopOpacity="0" />
+        </radialGradient>
+
+        <filter id={cheekBlur} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="5" />
         </filter>
 
-        <filter id={hoodDepth} x="-15%" y="-15%" width="130%" height="130%">
-          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#090514" floodOpacity="0.5" />
+        <filter id={softShadow} x="-25%" y="-25%" width="150%" height="150%">
+          <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="#0f766e" floodOpacity="0.22" />
         </filter>
       </defs>
 
@@ -118,191 +130,186 @@ export default function HaeruCharacter({
         className={cn(animate && expression === 'bringing' && !sleepy && 'haeru-bringing')}
         style={{
           transform: `scale(${bodyScale})`,
-          transformOrigin: '100px 100px',
+          transformOrigin: '100px 110px',
         }}
       >
-        {/* ── 1. OUTER HOOD & EARS (Velvet Obsidian) ── */}
-        <path
-          d="M 46 75
-             C 40 45, 48 30, 62 34
-             C 75 38, 86 52, 100 52
-             C 114 52, 125 38, 138 34
-             C 152 30, 160 45, 154 75
-             C 166 100, 164 140, 150 168
-             C 138 185, 118 190, 100 190
-             C 82 190, 62 185, 50 168
-             C 36 140, 34 100, 46 75 Z"
-          fill="#181326"
-          filter={`url(#${hoodDepth})`}
-        />
-        {/* Specular top rim */}
-        <path
-          d="M 58 48 C 72 42, 88 52, 100 52 C 112 52, 128 42, 142 48"
-          fill="none"
-          stroke="rgba(255,255,255,0.15)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
+        {/* Soft ground shadow */}
+        <ellipse cx="100" cy="178" rx="42" ry="8" fill="#0f766e" opacity="0.12" />
 
-        {/* Ear inner recesses + warm bounce */}
-        <path d="M 54 44 C 50 38, 56 36, 62 42 C 66 46, 68 55, 66 60 Z" fill="#100d1c" />
-        <path d="M 54 44 C 50 38, 56 36, 62 42 C 66 46, 68 55, 66 60 Z" fill={`url(#${earBounce})`} />
-        <path d="M 146 44 C 150 38, 144 36, 138 42 C 134 46, 132 55, 134 60 Z" fill="#100d1c" />
-        <path
-          d="M 146 44 C 150 38, 144 36, 138 42 C 134 46, 132 55, 134 60 Z"
-          fill={`url(#${earBounce})`}
-        />
+        {/* ── Compact body (under head — not a potato sack) ── */}
+        <g className={cn(animate && 'haeru-rainbow-cloth')} filter={`url(#${softShadow})`}>
+          <ellipse cx="100" cy="148" rx="48" ry="32" fill={`url(#${fur})`} />
+          {/* Belly patch */}
+          <ellipse cx="100" cy="152" rx="26" ry="18" fill="#ecfeff" opacity="0.55" />
+        </g>
 
-        {/* ── 2. LUMINOUS CHROMATIC FACE ── */}
-        <path
-          d="M 64 88
-             C 64 68, 80 58, 100 58
-             C 120 58, 136 68, 136 88
-             C 136 102, 146 114, 144 135
-             C 142 155, 124 168, 100 168
-             C 76 168, 58 155, 56 135
-             C 54 114, 64 102, 64 88 Z"
-          fill={`url(#${faceChroma})`}
-          className={cn(animate && 'haeru-chroma-face')}
-        />
+        {/* ── Round head (chibi: head dominates) ── */}
+        <g className={cn(animate && 'haeru-rainbow-cloth')}>
+          {/* Left ear */}
+          <path
+            d="M 48 58 L 38 18 Q 58 22 68 48 Z"
+            fill={`url(#${fur})`}
+            stroke="rgba(255,255,255,0.35)"
+            strokeWidth="1"
+          />
+          <path d="M 50 52 L 44 28 Q 56 30 62 46 Z" fill={`url(#${earInner})`} />
+          {/* Right ear */}
+          <path
+            d="M 152 58 L 162 18 Q 142 22 132 48 Z"
+            fill={`url(#${fur})`}
+            stroke="rgba(255,255,255,0.35)"
+            strokeWidth="1"
+          />
+          <path d="M 150 52 L 156 28 Q 144 30 138 46 Z" fill={`url(#${earInner})`} />
 
-        {/* Subsurface cheek / chin warm glow */}
-        <path
-          d="M 56 135 C 58 155, 76 168, 100 168 C 124 168, 142 155, 144 135 C 136 130, 64 130, 56 135 Z"
-          fill={`url(#${cheekBloom})`}
-          opacity={blush}
-          filter={`url(#${cheekBlur})`}
-          className={cn(animate && 'haeru-cheek-glow')}
-        />
+          {/* Head circle */}
+          <circle cx="100" cy="88" r="58" fill={`url(#${fur})`} filter={`url(#${softShadow})`} />
+          {/* Face plate — cream oval, inset so hood rim reads as fur edge */}
+          <ellipse cx="100" cy="94" rx="44" ry="42" fill={`url(#${face})`} />
+          {/* Soft forehead highlight */}
+          <ellipse cx="100" cy="68" rx="28" ry="12" fill="#ffffff" opacity="0.45" />
+        </g>
 
-        {/* Soft cheek bloom dots */}
-        <ellipse
-          cx="72"
-          cy="132"
-          rx="14"
-          ry="10"
-          fill="#ff4d6d"
-          opacity={blush * 0.45}
-          filter={`url(#${cheekBlur})`}
-        />
-        <ellipse
-          cx="128"
-          cy="132"
-          rx="14"
-          ry="10"
-          fill="#ff4d6d"
-          opacity={blush * 0.45}
-          filter={`url(#${cheekBlur})`}
-        />
+        {/* Cheeks */}
+        <g className="haeru-pure-pink-face">
+          <ellipse
+            cx="68"
+            cy="108"
+            rx="12"
+            ry="8"
+            fill={`url(#${cheek})`}
+            opacity={blush}
+            filter={`url(#${cheekBlur})`}
+          />
+          <ellipse
+            cx="132"
+            cy="108"
+            rx="12"
+            ry="8"
+            fill={`url(#${cheek})`}
+            opacity={blush}
+            filter={`url(#${cheekBlur})`}
+          />
+        </g>
 
-        {/* ── 3. LIQUID COSMIC EYES ── */}
+        {/* ── Eyes: white sclera + violet iris (reads as cute, not void blobs) ── */}
         <g
-          className={cn(animate && !showCrescents && 'haeru-eye-left')}
-          style={{
-            transform: `scale(${eyeScale})`,
-            transformOrigin: '80px 115px',
-          }}
+          className={cn(animate && !showCrescents && 'haeru-kawaii-blink')}
+          style={{ transform: `scale(${eyeScale})`, transformOrigin: '78px 90px' }}
         >
           {showCrescents ? (
             <path
-              d="M 68 118 Q 80 106 92 118"
+              d="M 64 92 Q 78 78 92 92"
               fill="none"
-              stroke="#2e1b5c"
+              stroke="#312e81"
               strokeWidth="3.2"
               strokeLinecap="round"
             />
           ) : (
-            <>
-              <ellipse cx="80" cy="115" rx="13" ry="18" fill={`url(#${eyeDepth})`} />
+            <g>
+              <ellipse cx="78" cy="90" rx="16" ry="18" fill="#ffffff" />
               <g
                 style={{
                   transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
-                  transition: 'transform 0.06s ease-out',
+                  transition: 'transform 0.08s cubic-bezier(0.2, 0.8, 0.2, 1)',
                 }}
               >
-                <ellipse cx="84" cy="108" rx="4.5" ry="6.5" fill="#ffffff" opacity="0.95" />
-                <circle cx="75" cy="122" r="2.2" fill="#ffffff" opacity="0.65" />
+                <ellipse cx="78" cy="92" rx="10" ry="12" fill={`url(#${iris})`} />
+                <circle cx="78" cy="92" r="4" fill="#0f172a" />
+                <ellipse cx="82" cy="86" rx="3.5" ry="4.5" fill="#ffffff" opacity="0.95" />
+                <circle cx="73" cy="98" r="1.6" fill="#ffffff" opacity="0.7" />
               </g>
-            </>
+            </g>
           )}
         </g>
 
         <g
-          className={cn(animate && !showCrescents && 'haeru-eye-right')}
+          className={cn(animate && !showCrescents && 'haeru-kawaii-blink')}
           style={{
             transform: `scale(${eyeScale})`,
-            transformOrigin: '120px 115px',
+            transformOrigin: '122px 90px',
+            animationDelay: '0.08s',
           }}
         >
           {showCrescents ? (
             <path
-              d="M 108 118 Q 120 106 132 118"
+              d="M 108 92 Q 122 78 136 92"
               fill="none"
-              stroke="#2e1b5c"
+              stroke="#312e81"
               strokeWidth="3.2"
               strokeLinecap="round"
             />
           ) : (
-            <>
-              <ellipse cx="120" cy="115" rx="13" ry="18" fill={`url(#${eyeDepth})`} />
+            <g>
+              <ellipse cx="122" cy="90" rx="16" ry="18" fill="#ffffff" />
               <g
                 style={{
                   transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`,
-                  transition: 'transform 0.06s ease-out',
+                  transition: 'transform 0.08s cubic-bezier(0.2, 0.8, 0.2, 1)',
                 }}
               >
-                <ellipse cx="124" cy="108" rx="4.5" ry="6.5" fill="#ffffff" opacity="0.95" />
-                <circle cx="115" cy="122" r="2.2" fill="#ffffff" opacity="0.65" />
+                <ellipse cx="122" cy="92" rx="10" ry="12" fill={`url(#${iris})`} />
+                <circle cx="122" cy="92" r="4" fill="#0f172a" />
+                <ellipse cx="126" cy="86" rx="3.5" ry="4.5" fill="#ffffff" opacity="0.95" />
+                <circle cx="117" cy="98" r="1.6" fill="#ffffff" opacity="0.7" />
               </g>
-            </>
+            </g>
           )}
         </g>
 
-        {/* ── 4. TRUFFLE NOSE & KITTEN MOUTH ── */}
-        <ellipse cx="100" cy="128" rx="3.2" ry="2.4" fill="#201535" />
-        <circle cx="100.8" cy="127.3" r="0.8" fill="#ffffff" opacity="0.5" />
-
+        {/* Nose + smile */}
+        <ellipse cx="100" cy="112" rx="3" ry="2.2" fill="#9f1239" />
+        <circle cx="100.8" cy="111.2" r="0.7" fill="#ffffff" opacity="0.65" />
         <path
           d={mouthPath}
           fill="none"
-          stroke="#221738"
+          stroke="#9f1239"
           strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
 
-        {/* ── 5. PEEKING PAWS ── */}
+        {/* Tiny whisker hints */}
+        <g opacity="0.35" stroke="#9f1239" strokeWidth="1.2" strokeLinecap="round">
+          <path d="M 58 112 H 48" />
+          <path d="M 58 116 H 46" />
+          <path d="M 142 112 H 152" />
+          <path d="M 142 116 H 154" />
+        </g>
+
+        {/* Paws */}
         <g
-          className="haeru-paws"
+          className={cn('haeru-paws', animate && 'haeru-rainbow-cloth')}
           style={{
             transform: `translateY(${pawLift}px)`,
             transition: 'transform 0.25s ease-out',
           }}
         >
           <ellipse
-            cx="68"
-            cy="180"
-            rx="10"
-            ry="7"
-            fill="#181326"
-            stroke="rgba(255,255,255,0.12)"
+            cx="72"
+            cy="168"
+            rx="14"
+            ry="9"
+            fill={`url(#${fur})`}
+            stroke="rgba(255,255,255,0.45)"
             strokeWidth="1"
           />
-          <ellipse cx="65" cy="181" rx="1.2" ry="2" fill="#100d1c" opacity="0.5" />
-          <ellipse cx="68" cy="182" rx="1.2" ry="2" fill="#100d1c" opacity="0.5" />
-          <ellipse cx="71" cy="181" rx="1.2" ry="2" fill="#100d1c" opacity="0.5" />
           <ellipse
-            cx="132"
-            cy="180"
-            rx="10"
-            ry="7"
-            fill="#181326"
-            stroke="rgba(255,255,255,0.12)"
+            cx="128"
+            cy="168"
+            rx="14"
+            ry="9"
+            fill={`url(#${fur})`}
+            stroke="rgba(255,255,255,0.45)"
             strokeWidth="1"
           />
-          <ellipse cx="129" cy="181" rx="1.2" ry="2" fill="#100d1c" opacity="0.5" />
-          <ellipse cx="132" cy="182" rx="1.2" ry="2" fill="#100d1c" opacity="0.5" />
-          <ellipse cx="135" cy="181" rx="1.2" ry="2" fill="#100d1c" opacity="0.5" />
+          {/* Toe beans hint */}
+          <circle cx="68" cy="170" r="2" fill="#fda4af" opacity="0.7" />
+          <circle cx="72" cy="171" r="2" fill="#fda4af" opacity="0.7" />
+          <circle cx="76" cy="170" r="2" fill="#fda4af" opacity="0.7" />
+          <circle cx="124" cy="170" r="2" fill="#fda4af" opacity="0.7" />
+          <circle cx="128" cy="171" r="2" fill="#fda4af" opacity="0.7" />
+          <circle cx="132" cy="170" r="2" fill="#fda4af" opacity="0.7" />
         </g>
       </g>
     </svg>
