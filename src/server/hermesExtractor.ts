@@ -27,17 +27,44 @@ export type HermesObservation = z.infer<typeof HermesObservationSchema>
 
 export type RosterChild = { id: string; name: string; code?: string }
 
-function heuristicExtract(transcript: string, roster: RosterChild[]): HermesObservation {
-  const lower = transcript.toLowerCase()
-  const matched =
-    roster.find((c) => lower.includes(c.name.toLowerCase())) ||
-    roster.find((c) =>
-      c.name
-        .split(/\s+/)
-        .some((part) => part.length > 2 && lower.includes(part.toLowerCase())),
-    )
+function firstName(name: string) {
+  return (name.split(/\s+/)[0] || name).toLowerCase()
+}
 
-  const childName = matched?.name || roster[0]?.name || 'Unknown child'
+function includesLoose(hay: string, needle: string) {
+  if (!needle || needle.length < 3) return false
+  if (hay.includes(needle)) return true
+  // STT often drops a letter (Kinle / Kinley)
+  if (needle.length >= 5 && hay.includes(needle.slice(0, -1))) return true
+  return false
+}
+
+/** Match a roster child from spoken text. Does NOT guess the first child. */
+export function matchChildFromTranscript(
+  transcript: string,
+  roster: RosterChild[],
+): RosterChild | null {
+  const lower = transcript.toLowerCase()
+  const full = roster.find((c) => includesLoose(lower, c.name.toLowerCase()))
+  if (full) return full
+  const byFirst = roster.find((c) => includesLoose(lower, firstName(c.name)))
+  if (byFirst) return byFirst
+  return null
+}
+
+function careBits(transcript: string): string[] {
+  const t = transcript.toLowerCase()
+  const bits: string[] = []
+  if (/\b(ate|eaten|lunch|breakfast|porridge|rice|soup|meal)\b/.test(t)) bits.push('meals noted')
+  if (/\b(nap|slept|sleep|rest)\b/.test(t)) bits.push('rest/nap noted')
+  if (/\b(happy|cheerful|sad|upset|mood|calm|radiant)\b/.test(t)) bits.push('mood noted')
+  if (/\b(toilet|potty|wee|diaper)\b/.test(t)) bits.push('toileting noted')
+  return bits
+}
+
+function heuristicExtract(transcript: string, roster: RosterChild[]): HermesObservation {
+  const matched = matchChildFromTranscript(transcript, roster)
+  const childName = matched?.name || 'Unknown child'
   const childId = matched?.id
 
   return HermesObservationSchema.parse({
@@ -50,8 +77,12 @@ function heuristicExtract(transcript: string, roster: RosterChild[]): HermesObse
     confidence: 'Heuristic fallback · configure GEMINI_API_KEY for full ELDS mapping',
     source: 'voice',
     transcription: transcript,
-    parentSafeTitle: `${childName.split(' ')[0]} had a learning moment today`,
-    parentSafeDesc: `${childName.split(' ')[0]} was observed during class — a classmate-safe summary for the family.`,
+    parentSafeTitle: matched
+      ? `${childName.split(' ')[0]} had a learning moment today`
+      : 'Learning moment today',
+    parentSafeDesc: matched
+      ? `${childName.split(' ')[0]} was observed during class${careBits(transcript).length ? ` (${careBits(transcript).join(', ')})` : ''} — a classmate-safe summary for the family.`
+      : 'A classroom moment was recorded. Child will be confirmed by staff.',
   })
 }
 
@@ -81,9 +112,11 @@ Return JSON ONLY matching this shape:
 { childId?, childName, domain, trigger, strategy, milestone, confidence, source, transcription?, parentSafeTitle?, parentSafeDesc? }
 Rules:
 - source must be "voice"
-- childName MUST be one of the roster children below (or closest match). Prefer including childId.
+- If the transcript clearly names a roster child, set childName + childId.
+- If the child is UNCLEAR, set childName to "UNKNOWN" and omit childId. Do not guess.
 - parentSafeTitle/parentSafeDesc name ONLY the subject child; peers become "a friend" / "a classmate"
 - Never invent children not in the roster
+- Extract care if spoken: meals, nap, mood, toileting into parentSafeDesc
 - Domains prefer: Physical & Motor; Social & Emotional; Cognitive; Language (Dzo/Eng); Cultural & Moral; Approaches to Learning
 
 Valid children for THIS classroom only:
@@ -119,6 +152,16 @@ ${rosterLines}`
     const parsed = JSON.parse(stripJsonFence(text)) as Record<string, unknown>
     if (!parsed.source) parsed.source = 'voice'
     if (!parsed.transcription) parsed.transcription = transcript
+    const parsedName = String(parsed.childName || '')
+    if (!parsedName || parsedName.toUpperCase() === 'UNKNOWN') {
+      parsed.childName = 'Unknown child'
+      delete parsed.childId
+    }
+    const matched = matchChildFromTranscript(transcript, roster)
+    if (matched && (!parsed.childId || parsed.childName === 'Unknown child')) {
+      parsed.childId = matched.id
+      parsed.childName = matched.name
+    }
     return HermesObservationSchema.parse(parsed)
   } catch (err) {
     console.error('[haeru-voice] Zod/parse failed', err)
