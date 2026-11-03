@@ -20,6 +20,7 @@ type TgMessage = {
   text?: string
   voice?: TgVoice
   audio?: { file_id: string }
+  video_note?: { file_id: string }
 }
 type TgCallback = {
   id: string
@@ -102,14 +103,16 @@ async function handleVoice(msg: TgMessage, user: {
   room: string | null
   role: string
 }) {
-  const fileId = msg.voice?.file_id || msg.audio?.file_id
+  const fileId = msg.voice?.file_id || msg.audio?.file_id || msg.video_note?.file_id
   if (!fileId) return
+
+  await tgReply(msg.chat.id, '🎧 Heard your note — Haeru is listening…')
 
   try {
     const buf = await downloadVoiceFile(fileId)
     const { text } = await transcribeAudio(buf, 'voice.ogg')
     if (!text) {
-      await tgReply(msg.chat.id, '⚠️ Haeru could not hear that note clearly. Please try again.')
+      await tgReply(msg.chat.id, '⚠️ Haeru could not hear that note clearly. Please try a shorter voice note (5–20 seconds).')
       return
     }
 
@@ -140,9 +143,13 @@ async function handleVoice(msg: TgMessage, user: {
     await notifyDirector(moment.id, user.centreId)
   } catch (err) {
     console.error('[haeru-voice] voice pipeline', err)
+    const hint = err instanceof Error ? err.message : ''
+    const sttMissing = /No STT provider|GROQ_API_KEY|OPENAI_API_KEY|DEEPGRAM/i.test(hint)
     await tgReply(
       msg.chat.id,
-      '⚠️ Haeru Voice AI hit a temporary error. Please try once more in a minute.',
+      sttMissing
+        ? '⚠️ Voice AI is not fully configured on the server (speech-to-text key). Director can retry after ops add GROQ_API_KEY.'
+        : '⚠️ Haeru Voice AI hit a temporary error. Please try once more in a minute.',
     )
   }
 }
@@ -207,18 +214,19 @@ export async function processTelegramUpdate(update: TelegramUpdate): Promise<voi
   })
 
   if (!user) {
-    if (text) {
-      await tgReply(
-        msg.chat.id,
-        '👋 Welcome to Haeru Voice AI!\n\nSend your pairing code (pair_wsh_karma) or open:\nhttps://t.me/HaeruEccdBot?start=pair_wsh_karma',
-      )
-    }
+    await tgReply(
+      msg.chat.id,
+      '👋 Welcome to Haeru Voice AI!\n\nThis phone is not paired yet, so voice notes cannot be processed.\n\nAsk the Director to open Haeru → Children → Telegram pairing → Generate link, then tap that link here.',
+    )
     return
   }
 
-  if (msg.voice || msg.audio) {
+  if (msg.voice || msg.audio || msg.video_note) {
     if (user.role !== 'facilitator' && user.role !== 'owner') {
-      await tgReply(msg.chat.id, 'Voice notes are for paired facilitators. Thanks!')
+      await tgReply(
+        msg.chat.id,
+        'Voice notes are for paired facilitators and the Director. Parents receive private updates after Director confirm — no need to send voice here.',
+      )
       return
     }
     await handleVoice(msg, user)

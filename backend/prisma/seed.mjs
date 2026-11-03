@@ -131,12 +131,14 @@ async function main() {
       password: u.password,
       room: u.room ?? null,
       centreId: centre.id,
-      pairingToken: u.pairingToken ?? null,
     }
     if (existing) {
+      // Do not clobber Telegram pairing on every boot / redeploy.
       await prisma.user.update({ where: { id: existing.id }, data })
     } else {
-      await prisma.user.create({ data })
+      await prisma.user.create({
+        data: { ...data, pairingToken: u.pairingToken ?? null },
+      })
     }
   }
 
