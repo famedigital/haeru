@@ -14,6 +14,13 @@ import {
 } from './hermesExtractor'
 import { saveHermesMoment, confirmMomentAndDeliver, rejectMoment } from './hermesMomentStore'
 import { notifyDirector } from './hermesDirectorNotify'
+import { completeHomeActivity, getHomeActivity } from './homeActivity'
+import { homeEffortKeyboard, notifyStaffHomeDone } from './homeActivityTelegram'
+import {
+  clearPendingHomeNote,
+  getPendingHomeNote,
+  savePendingHomeNote,
+} from './homeActivityPending'
 import {
   clearPendingVoice,
   getPendingByChat,
@@ -272,6 +279,146 @@ async function completePendingPick(
   return true
 }
 
+function familyActor(user: {
+  id: string
+  role: string
+  centreId: string
+  room: string | null
+}) {
+  return { id: user.id, role: user.role, centreId: user.centreId, room: user.room }
+}
+
+async function finishHomeHowWent(
+  activityId: string,
+  user: { id: string; role: string; centreId: string; room: string | null; name?: string },
+  chatId: string,
+  howWent: string | undefined,
+  source: 'telegram_text' | 'telegram_voice',
+  extra?: { effort?: 'easy' | 'ok' | 'hard' },
+) {
+  const body: { howWent?: string; effort?: 'easy' | 'ok' | 'hard' } = {}
+  if (howWent?.trim()) body.howWent = howWent.trim()
+  if (extra?.effort) body.effort = extra.effort
+  const result = await completeHomeActivity(activityId, familyActor(user), body, source)
+  clearPendingHomeNote(chatId)
+  if (!result.ok) {
+    await tgReply(chatId, result.error ? String(result.error) : 'Could not save that home note.')
+    return
+  }
+  await tgReply(
+    chatId,
+    '🙏 Thank you. The Director will review this before it updates school progress.',
+  )
+  await notifyStaffHomeDone({
+    centreId: result.data.centreId,
+    childName: result.data.childName || 'Child',
+    title: result.data.title,
+    howWent: result.data.howWent,
+    effort: result.data.effort,
+  })
+}
+
+async function handleFamilyHomeVoice(
+  msg: TgMessage,
+  user: { id: string; role: string; centreId: string; room: string | null },
+) {
+  const pending = getPendingHomeNote(String(msg.chat.id))
+  if (!pending) {
+    await tgReply(
+      msg.chat.id,
+      'Tap We did it on the home practice first (or mark Done in Haeru on the web), then you can send a short voice about how it went.',
+    )
+    return
+  }
+  const fileId = msg.voice?.file_id || msg.audio?.file_id || msg.video_note?.file_id
+  if (!fileId) return
+  try {
+    const buf = await downloadVoiceFile(fileId)
+    const { text } = await transcribeAudio(buf, 'voice.ogg')
+    await finishHomeHowWent(
+      pending.activityId,
+      user,
+      String(msg.chat.id),
+      text || '(voice note, no transcript)',
+      'telegram_voice',
+    )
+  } catch (err) {
+    console.error('[haeru-home] family voice', err)
+    await tgReply(msg.chat.id, 'Could not hear that note. Type a short sentence instead.')
+  }
+}
+
+async function handleHomeCallback(
+  cb: TgCallback,
+  user: { id: string; role: string; centreId: string; room: string | null } | null,
+) {
+  const data = cb.data || ''
+  const chatId = cb.message?.chat.id
+  if (!user || (user.role !== 'parent' && user.role !== 'caregiver')) {
+    await answerCallback(cb.id, 'Pair as this child’s parent or caregiver.')
+    return
+  }
+  if (!chatId) {
+    await answerCallback(cb.id, 'Try again from the home practice message.')
+    return
+  }
+
+  if (data.startsWith('hd:')) {
+    const id = data.slice(3)
+    const row = await getHomeActivity(id)
+    if (!row) {
+      await answerCallback(cb.id, 'That practice is gone.')
+      return
+    }
+    const result = await completeHomeActivity(id, familyActor(user), {}, 'telegram_text')
+    if (!result.ok) {
+      await answerCallback(cb.id, typeof result.error === 'string' ? result.error : 'Could not save')
+      return
+    }
+    savePendingHomeNote(String(chatId), id, user.id)
+    await answerCallback(cb.id, 'Saved — how did it go?')
+    await tgReply(
+      chatId,
+      'How did it go? Tap Easy / OK / Hard, then send a short text or voice — or Skip note.',
+      { reply_markup: homeEffortKeyboard(id) },
+    )
+    return
+  }
+
+  if (data.startsWith('he:')) {
+    const rest = data.slice(3)
+    const cut = rest.lastIndexOf(':')
+    const id = rest.slice(0, cut)
+    const effort = rest.slice(cut + 1) as 'easy' | 'ok' | 'hard'
+    if (!id || !['easy', 'ok', 'hard'].includes(effort)) {
+      await answerCallback(cb.id, 'Invalid')
+      return
+    }
+    savePendingHomeNote(String(chatId), id, user.id)
+    const result = await completeHomeActivity(id, familyActor(user), { effort }, 'telegram_text')
+    if (!result.ok) {
+      await answerCallback(cb.id, typeof result.error === 'string' ? result.error : 'Could not save')
+      return
+    }
+    await answerCallback(cb.id, `Noted ${effort}`)
+    await tgReply(chatId, 'Optional: send a short text or voice about how it went, or tap Skip note.')
+    await notifyStaffHomeDone({
+      centreId: result.data.centreId,
+      childName: result.data.childName || 'Child',
+      title: result.data.title,
+      howWent: result.data.howWent,
+      effort: result.data.effort,
+    })
+    return
+  }
+
+  if (data.startsWith('hs:')) {
+    const id = data.slice(3)
+    await answerCallback(cb.id, 'Saved')
+    await finishHomeHowWent(id, user, String(chatId), undefined, 'telegram_text')
+  }
+}
+
 async function handleCallback(cb: TgCallback) {
   const data = cb.data || ''
   const staff = await prisma.user.findFirst({
@@ -298,6 +445,11 @@ async function handleCallback(cb: TgCallback) {
     }
     await answerCallback(cb.id, `Saving for ${child.name.split(' ')[0]}…`)
     await completePendingPick(pendingId, child, staff, cb.message?.chat.id || pending.chatId)
+    return
+  }
+
+  if (data.startsWith('hd:') || data.startsWith('he:') || data.startsWith('hs:')) {
+    await handleHomeCallback(cb, staff)
     return
   }
 
@@ -368,6 +520,10 @@ export async function processTelegramUpdate(update: TelegramUpdate): Promise<voi
   }
 
   if (msg.voice || msg.audio || msg.video_note) {
+    if (user.role === 'parent' || user.role === 'caregiver') {
+      await handleFamilyHomeVoice(msg, user)
+      return
+    }
     if (user.role !== 'facilitator' && user.role !== 'owner') {
       await tgReply(
         msg.chat.id,
@@ -376,6 +532,19 @@ export async function processTelegramUpdate(update: TelegramUpdate): Promise<voi
       return
     }
     await handleVoice(msg, user)
+    return
+  }
+
+  if (text && (user.role === 'parent' || user.role === 'caregiver')) {
+    const pending = getPendingHomeNote(String(msg.chat.id))
+    if (pending) {
+      await finishHomeHowWent(pending.activityId, user, String(msg.chat.id), text, 'telegram_text')
+      return
+    }
+    await tgReply(
+      msg.chat.id,
+      'Family updates are private and child-scoped. When school sends a home practice, tap We did it — or mark Done in Haeru on the web.',
+    )
     return
   }
 

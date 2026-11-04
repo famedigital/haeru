@@ -83,6 +83,7 @@ model Child {
   invoices           Invoice[]
   moments            Moment[]
   hermesMoments      HermesMoment[]
+  homeActivities     HomeActivity[]
   pickupLogs         PickupLog[]
 
   @@index([centreId, room])
@@ -256,4 +257,34 @@ model HermesMoment {
 
   @@index([centreId, status])
   @@index([childId])
+}
+
+/// One home practice per child, spawned from a Director-confirmed classroom moment.
+model HomeActivity {
+  id            String    @id @default(uuid())
+  centreId      String    @default("WSH")
+  childId       String
+  momentId      String?
+  domain        String
+  title         String
+  instruction   String
+  /// offered | done | expired | progress_confirmed | dismissed
+  status        String    @default("offered")
+  /// easy | ok | hard
+  effort        String?
+  howWent       String?
+  /// web | telegram_text | telegram_voice
+  howWentSource String?
+  completedAt   DateTime?
+  completedById String?
+  expiresAt     DateTime
+  progressObsId String?
+  confirmedById String?
+  confirmedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  child         Child     @relation(fields: [childId], references: [id])
+
+  @@index([childId, status])
+  @@index([centreId, status])
+  @@index([expiresAt])
 }

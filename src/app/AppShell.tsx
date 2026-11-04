@@ -23,6 +23,8 @@ import { PhotoStaging } from '../components/facilitator/PhotoStaging'
 import { RecordProgressELDS } from '../components/facilitator/RecordProgressELDS'
 import { VoiceHub } from '../components/facilitator/VoiceHub'
 import { DailyReflection } from '../components/parent/DailyReflection'
+import { HomePractice } from '../components/parent/HomePractice'
+import { HomeActivityReview } from '../components/director/HomeActivityReview'
 import { ChildMomentsFeed } from '../components/parent/ChildMomentsFeed'
 import { PaymentReporter } from '../components/parent/PaymentReporter'
 import { ELDSRadarView } from '../components/parent/ELDSRadarView'
@@ -70,6 +72,7 @@ function ScreenRouter() {
       return (
         <div className="space-y-10">
           <DirectorQueue />
+          <HomeActivityReview />
           <EldsReviewGate />
         </div>
       )
@@ -81,6 +84,10 @@ function ScreenRouter() {
       return <RecordProgressELDS />
     case 'voice-hub':
       return <VoiceHub />
+    case 'home-review':
+      return <HomeActivityReview facilitator />
+    case 'practice':
+      return <HomePractice caregiver={role === 'caregiver'} />
     case 'phome':
       return <DailyReflection />
     case 'chome':

@@ -3,6 +3,7 @@ import { formatNu, childFirstName } from '../../data/enterprise'
 import { apiFetch } from '../../lib/api/httpClient'
 import { useAppStore } from '../../lib/store/appStore'
 import { GlassBadge, GlassButton, GlassCard } from '../ui'
+import { HomePractice } from './HomePractice'
 
 type LiveMoment = {
   id: string
@@ -101,6 +102,8 @@ export function DailyReflection({ caregiver = false }: { caregiver?: boolean }) 
           </div>
         ) : null}
       </GlassCard>
+
+      <HomePractice caregiver={caregiver} />
 
       {caregiver ? (
         <div className="obsidian-pill rounded-xl px-4 py-3 text-sm text-violet-700 dark:text-violet-200 border border-violet-400/30">

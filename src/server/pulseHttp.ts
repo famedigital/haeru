@@ -39,6 +39,14 @@ import {
   listDeliveredForChild,
   listPendingDirector,
 } from './hermesMomentStore'
+import { prisma } from './prisma'
+import {
+  completeHomeActivity,
+  listHomeActivitiesForGuardian,
+  listHomeActivitiesForStaff,
+  reviewHomeActivity,
+} from './homeActivity'
+import { notifyStaffHomeDone } from './homeActivityTelegram'
 
 const DEV_KEY = process.env.PULSE_API_KEY || 'dev-pulse-key'
 
@@ -86,6 +94,20 @@ function bearerToken(req: IncomingMessage): string | null {
     return auth.slice(7).trim()
   }
   return null
+}
+
+async function actorFromReq(req: IncomingMessage) {
+  const token = bearerToken(req)
+  const m = token?.match(/^uat-(.+)$/)
+  if (!m) return null
+  const user = await prisma.user.findUnique({ where: { id: m[1]! } })
+  if (!user) return null
+  return {
+    id: user.id,
+    role: user.role,
+    centreId: user.centreId,
+    room: user.room,
+  }
 }
 
 export async function handlePulseHttp(
@@ -350,6 +372,114 @@ export async function handlePulseHttp(
       const raw = await readBody(req)
       const json = raw ? JSON.parse(raw) : {}
       const result = await createEldsObservation(json)
+      send(res, result.status, result)
+      return true
+    }
+
+    const pathOnly = url.split('?')[0] || url
+
+    if (req.method === 'GET' && pathOnly === '/api/home-activities') {
+      if (!authorize(req)) {
+        send(res, 401, { ok: false, error: 'Unauthorized' })
+        return true
+      }
+      const actor = await actorFromReq(req)
+      if (!actor) {
+        send(res, 401, { ok: false, error: 'Session required' })
+        return true
+      }
+      const q = new URL(url, 'http://local')
+      const childId = q.searchParams.get('childId')
+      const view = q.searchParams.get('view')
+      if (actor.role === 'parent' || actor.role === 'caregiver') {
+        if (!childId) {
+          send(res, 400, { ok: false, error: 'childId required' })
+          return true
+        }
+        const result = await listHomeActivitiesForGuardian(actor.id, childId)
+        send(res, result.status, result)
+        return true
+      }
+      if (actor.role === 'owner' || actor.role === 'facilitator') {
+        const result = await listHomeActivitiesForStaff(
+          actor,
+          view === 'open' ? 'open' : 'review',
+        )
+        send(res, result.status, result)
+        return true
+      }
+      send(res, 403, { ok: false, error: 'Forbidden' })
+      return true
+    }
+
+    const homeDone = pathOnly.match(/^\/api\/home-activities\/([^/]+)\/done\/?$/)
+    if (req.method === 'POST' && homeDone) {
+      if (!authorize(req)) {
+        send(res, 401, { ok: false, error: 'Unauthorized' })
+        return true
+      }
+      const actor = await actorFromReq(req)
+      if (!actor) {
+        send(res, 401, { ok: false, error: 'Session required' })
+        return true
+      }
+      const raw = await readBody(req)
+      const json = raw ? JSON.parse(raw) : {}
+      const id = decodeURIComponent(homeDone[1]!)
+      const result = await completeHomeActivity(id, actor, json, 'web')
+      if (result.ok && result.data.status === 'done') {
+        void notifyStaffHomeDone({
+          centreId: result.data.centreId,
+          childName: result.data.childName || 'Child',
+          title: result.data.title,
+          howWent: result.data.howWent,
+          effort: result.data.effort,
+        })
+      }
+      send(res, result.status, result)
+      return true
+    }
+
+    const homeConfirm = pathOnly.match(/^\/api\/home-activities\/([^/]+)\/confirm-progress\/?$/)
+    if (req.method === 'POST' && homeConfirm) {
+      if (!authorize(req)) {
+        send(res, 401, { ok: false, error: 'Unauthorized' })
+        return true
+      }
+      const actor = await actorFromReq(req)
+      if (!actor) {
+        send(res, 401, { ok: false, error: 'Session required' })
+        return true
+      }
+      const raw = await readBody(req)
+      const json = raw ? JSON.parse(raw) : {}
+      const result = await reviewHomeActivity(
+        decodeURIComponent(homeConfirm[1]!),
+        actor,
+        'confirm',
+        json,
+      )
+      send(res, result.status, result)
+      return true
+    }
+
+    const homeDismiss = pathOnly.match(/^\/api\/home-activities\/([^/]+)\/dismiss\/?$/)
+    if (req.method === 'POST' && homeDismiss) {
+      if (!authorize(req)) {
+        send(res, 401, { ok: false, error: 'Unauthorized' })
+        return true
+      }
+      const actor = await actorFromReq(req)
+      if (!actor) {
+        send(res, 401, { ok: false, error: 'Session required' })
+        return true
+      }
+      const result = await reviewHomeActivity(
+        decodeURIComponent(homeDismiss[1]!),
+        actor,
+        'dismiss',
+        {},
+      )
       send(res, result.status, result)
       return true
     }

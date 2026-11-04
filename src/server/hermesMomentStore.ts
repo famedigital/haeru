@@ -5,6 +5,8 @@
 import { prisma } from './prisma'
 import type { HermesObservation } from './hermesExtractor'
 import { deliverToParents } from './hermesParentDelivery'
+import { offerHomeActivityFromMoment } from './homeActivity'
+import { deliverHomeActivityToFamily } from './homeActivityTelegram'
 
 export async function saveHermesMoment(opts: {
   obs: HermesObservation
@@ -72,6 +74,18 @@ export async function confirmMomentAndDeliver(momentId: string, confirmedById?: 
       obs = null
     }
     await deliverToParents(updated.childId, obs, updated)
+    try {
+      const home = await offerHomeActivityFromMoment({
+        childId: updated.childId,
+        childName: updated.childName,
+        centreId: updated.centreId,
+        momentId: updated.id,
+        domain: updated.domain,
+      })
+      await deliverHomeActivityToFamily(home.id)
+    } catch (err) {
+      console.error('[haeru-home] offer after confirm failed', err)
+    }
   }
 
   return { ok: true as const, moment: updated }

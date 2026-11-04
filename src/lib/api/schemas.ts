@@ -160,3 +160,20 @@ export type AuthLoginInput = z.infer<typeof AuthLoginSchema>
 export type CentrePatchInput = z.infer<typeof CentrePatchSchema>
 export type StaffCreateInput = z.infer<typeof StaffCreateSchema>
 export type AdmissionCompleteInput = z.infer<typeof AdmissionCompleteSchema>
+
+export const HomeActivityEffortSchema = z.enum(['easy', 'ok', 'hard'])
+
+/** POST /api/home-activities/:id/done */
+export const HomeActivityDoneSchema = z
+  .object({
+    effort: HomeActivityEffortSchema.optional(),
+    howWent: z.string().max(800).optional(),
+  })
+  .strict()
+
+/** POST /api/home-activities/:id/confirm-progress | dismiss */
+export const HomeActivityReviewSchema = z
+  .object({
+    rating: RatingLevelSchema.optional(),
+  })
+  .strict()
